@@ -1,4 +1,4 @@
-// Soul 2, Soul Cinema and Soul (standard) — text to image.
+// Soul 2, Soul Cinema and Soul (standard) — text and image generation.
 // Sources:
 //   https://docs.higgsfield.ai/docs/models/soul-2
 //   https://docs.higgsfield.ai/docs/models/soul-2/generate
@@ -6,6 +6,7 @@
 //   https://docs.higgsfield.ai/docs/models/soul-cinema/generate
 //   https://docs.higgsfield.ai/docs/models/soul-standard
 //   https://docs.higgsfield.ai/docs/models/soul-standard/generate
+//   https://open.higgsfield.ai/models/higgsfield-ai/soul/v2/image-to-image/api-reference
 // Not exposed: seed, style_id / style_strength, custom_reference_* (Soul ID is v2).
 import { compact, first, int, requirePrompt } from "../mappers"
 import { SOUL_ASPECT } from "../tokens"
@@ -82,6 +83,40 @@ export const soul2: ModelEntry = {
   }),
 }
 
+export const soul2Edit: ModelEntry = {
+  ...meta,
+  id: "soul-2-edit",
+  tab: "edit",
+  label: "Soul 2 Edit",
+  description: "Guide an editorial image from a reference photo and a new prompt.",
+  bestFor: "Restyling a portrait or fashion reference",
+  category: "PORTRAIT",
+  roles: { start: 1 },
+  requiredRoles: ["start"],
+  roleLabels: { start: "Reference photo" },
+  requirePrompt: true,
+  settings: {
+    aspectRatio: aspectRatio("4:3"),
+    resolution: shared.resolution,
+    batchSize: shared.batchSize,
+  },
+  order: 3,
+  docs: [
+    "https://open.higgsfield.ai/models/higgsfield-ai/soul/v2/image-to-image/api-reference",
+  ],
+  toPlatform: (plane) => ({
+    path: "higgsfield-ai/soul/v2/image-to-image",
+    body: compact({
+      prompt: requirePrompt(plane, "Soul 2 Edit"),
+      image_url: first(plane, "start"),
+      aspect_ratio: plane.settings.aspectRatio,
+      resolution: plane.settings.resolution,
+      batch_size: int(plane.settings.batchSize),
+      enhance_prompt: true,
+    }),
+  }),
+}
+
 export const soulCinema: ModelEntry = {
   ...meta,
   id: "soul-cinema",
@@ -125,5 +160,5 @@ export const soul: ModelEntry = {
   }),
 }
 
-const models = [soul2, soulCinema, soul]
+const models = [soul2, soul2Edit, soulCinema, soul]
 export default models

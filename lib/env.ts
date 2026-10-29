@@ -53,6 +53,10 @@ const schema = z.object({
     "HF_CREDENTIALS must be key_id:key_secret"
   ),
   HF_WEBHOOK_SECRET: optionalString,
+  HF_WEBHOOK_SIGNING_SECRET: optionalString.refine(
+    (value) => value === undefined || /^whsec_[A-Za-z0-9+/]+={0,2}$/.test(value),
+    "HF_WEBHOOK_SIGNING_SECRET must be the whsec_ secret from Higgsfield Console"
+  ),
   HF_WEBHOOK_BASE_URL: optionalString,
   HF_PRICE_GUARD: bool(true),
 
@@ -86,6 +90,7 @@ const REQUIRED_IN_PRODUCTION = [
   "MONGODB_URI",
   "HF_CREDENTIALS",
   "HF_WEBHOOK_SECRET",
+  "HF_WEBHOOK_SIGNING_SECRET",
   "HF_WEBHOOK_BASE_URL",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",

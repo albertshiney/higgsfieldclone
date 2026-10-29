@@ -18,6 +18,7 @@ export function setupEnv(): void {
     HF_API_BASE_URL: "https://hf.test",
     HF_CREDENTIALS: "key:secret",
     HF_WEBHOOK_SECRET: "webhook-secret",
+    HF_WEBHOOK_SIGNING_SECRET: `whsec_${Buffer.from("higgsfield-test-signing-key").toString("base64")}`,
     HF_WEBHOOK_BASE_URL: "https://vireo.test",
     HF_PRICE_GUARD: "false",
     CREDIT_USD_VALUE: "0.01",

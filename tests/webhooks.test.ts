@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto"
+import { createHmac, randomUUID } from "node:crypto"
 
 import {
   afterAll,
@@ -220,17 +220,34 @@ describe("Higgsfield webhook route", () => {
     return { user, view, doc }
   }
 
-  const call = (gid: string, token: string, body: unknown) =>
-    higgsfieldWebhook(
+  const call = (
+    gid: string,
+    token: string,
+    body: unknown,
+    options: { signedAt?: number; tamperSignature?: boolean } = {}
+  ) => {
+    const rawBody = JSON.stringify(body)
+    const eventId = `msg_${randomUUID()}`
+    const timestamp = String(options.signedAt ?? Math.floor(Date.now() / 1000))
+    const signature = createHmac("sha256", "higgsfield-test-signing-key")
+      .update(`${eventId}.${timestamp}.${rawBody}`)
+      .digest("base64")
+    return higgsfieldWebhook(
       new Request(
         `https://vireo.test/api/webhooks/higgsfield?gid=${gid}&t=${token}`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(body),
+          headers: {
+            "content-type": "application/json",
+            "webhook-id": eventId,
+            "webhook-timestamp": timestamp,
+            "webhook-signature": `v1,${options.tamperSignature ? "A".repeat(44) : signature}`,
+          },
+          body: rawBody,
         }
       )
     )
+  }
 
   it("rejects a bad token with 401 (not retried by the platform)", async () => {
     const { doc } = await submitted()
@@ -239,6 +256,17 @@ describe("Higgsfield webhook route", () => {
       status: "completed",
     })
     expect(response.status).toBe(401)
+  })
+
+  it("rejects tampered and stale signed deliveries", async () => {
+    const { doc } = await submitted()
+    const gid = doc._id.toHexString()
+    const token = webhookToken(gid, "webhook-secret")
+    const body = { request_id: doc.hfRequestId, status: "completed" }
+    expect((await call(gid, token, body, { tamperSignature: true })).status).toBe(401)
+    expect(
+      (await call(gid, token, body, { signedAt: Math.floor(Date.now() / 1000) - 301 })).status
+    ).toBe(401)
   })
 
   it("never trusts the payload: re-fetches status before finalizing", async () => {

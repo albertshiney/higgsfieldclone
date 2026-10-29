@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto"
+
 import { describe, expect, it } from "vitest"
 
 import { setupEnv, tinyMp4, tinyPng, tinyWav } from "./support/harness"
@@ -7,7 +9,7 @@ setupEnv()
 const { refundSplit, splitDebit, InsufficientCreditsError } =
   await import("@/lib/billing/ledger")
 const { probeMedia, probeImage } = await import("@/lib/storage/probe")
-const { verifyWebhookToken, webhookToken, webhookUrlFor } =
+const { verifyWebhookToken, verifyWebhookSignature, webhookToken, webhookUrlFor } =
   await import("@/lib/higgsfield/webhook")
 const { extractArtifacts } = await import("@/lib/higgsfield/client")
 const { parseUploadTicket, requireUploadContentType } =
@@ -87,6 +89,26 @@ describe("webhook tokens", () => {
     expect(
       verifyWebhookToken(gid, url.searchParams.get("t")!, "webhook-secret")
     ).toBe(true)
+  })
+})
+
+describe("Higgsfield signed deliveries", () => {
+  it("verifies raw body, timestamp, and a signature among rotated keys", () => {
+    const body = '{"request_id":"a","status":"completed"}'
+    const now = 1_792_000_000
+    const id = "msg_123"
+    const secret = `whsec_${Buffer.from("test-key").toString("base64")}`
+    const signed = createHmac("sha256", "test-key")
+      .update(`${id}.${now}.${body}`)
+      .digest("base64")
+    const headers = new Headers({
+      "webhook-id": id,
+      "webhook-timestamp": String(now),
+      "webhook-signature": `v1,${"A".repeat(44)} v1,${signed}`,
+    })
+    expect(verifyWebhookSignature(body, headers, secret, now)).toBe(true)
+    expect(verifyWebhookSignature(`${body} `, headers, secret, now)).toBe(false)
+    expect(verifyWebhookSignature(body, headers, secret, now + 301)).toBe(false)
   })
 })
 

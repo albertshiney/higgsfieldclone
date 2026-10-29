@@ -1,7 +1,9 @@
 # Higgsfield UI inventory (for a UX clone)
 
 Captured 2026-09-26, signed out, at 1440×900 (desktop) and 390×844 (mobile, iPhone UA, DPR 2).
-Screenshots: `screens/` (all files are named `<page>-<state>-<width>`). Full design-token dump: `design-tokens.json` (346 CSS custom properties read from the live app).
+The original live-site captures described below were not included in the supplied Git repository. A new signed-out capture set was saved locally on 2026-10-30 as `docs/screens/higgsfield-{home,image,video,audio,effects,community,pricing,library}-{1440,390}.png`; these third-party reference images are intentionally Git-ignored. The folder also contains tracked Vireo comparison screenshots. Full design-token dump: `design-tokens.json` (346 CSS custom properties read from the September live app).
+
+**2026-10-30 refresh:** The [live home page](https://higgsfield.ai/) has a different top link set and feature carousel from the September inventory: Genjutsu, Content Factory, Playable, AI Influencer, and Kling 4.0 are prominent. The video generator at `/ai/video?model=seedance_2_5` still has a narrow left control panel, a right How it works canvas, and a bottom Generate action (captured at 1440 px). `/library/all` redirected to `/generate` while signed out; mobile `/audio` redirected to `/mobile/audio`, and its first capture remained on a loading spinner. These captures document visible public states only; signed-in history and payments remain unverified. No forms or generation controls were submitted.
 
 **How the captures were made:** Firecrawl had no credits left, so every screenshot was taken with local headless Chrome (Playwright, `channel="chrome"`). Non-essential cookies were rejected on every visit. Google One Tap requests were blocked. No forms were submitted, no Generate or checkout was clicked, and I never signed in.
 

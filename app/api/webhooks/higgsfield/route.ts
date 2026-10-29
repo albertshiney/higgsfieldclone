@@ -6,7 +6,10 @@ import { isDuplicateKey } from "@/lib/billing/ledger"
 import { env } from "@/lib/env"
 import { finalizeGeneration } from "@/lib/generations/finalize"
 import { asRecord } from "@/lib/higgsfield/client"
-import { verifyWebhookToken } from "@/lib/higgsfield/webhook"
+import {
+  verifyWebhookSignature,
+  verifyWebhookToken,
+} from "@/lib/higgsfield/webhook"
 import { json } from "@/lib/http"
 
 export const runtime = "nodejs"
@@ -16,19 +19,33 @@ const REQUEST_ID = /^[a-f0-9-]{8,64}$/i
 
 /**
  * Higgsfield completion webhook (docs: how-to/webhooks). The URL carries the
- * generation id and an HMAC token; the payload itself is never trusted —
- * finalizeGeneration re-fetches the status. Replies fast (< 10 s) and does the
- * copy work after the response.
+ * generation id and an HMAC token. The raw delivery also has a Standard
+ * Webhooks signature; finalizeGeneration re-fetches status before acting.
  */
 export async function POST(request: Request) {
   const url = new URL(request.url)
   const gid = url.searchParams.get("gid") ?? ""
   const token = url.searchParams.get("t") ?? ""
-  const secret = env().HF_WEBHOOK_SECRET
+  const { HF_WEBHOOK_SECRET: secret, HF_WEBHOOK_SIGNING_SECRET: signingSecret } =
+    env()
   if (!secret || !verifyWebhookToken(gid, token, secret))
     return json({ error: "Invalid webhook token" }, 401)
 
-  const envelope = asRecord(await request.json().catch(() => null))
+  const rawBody = await request.text()
+  if (
+    signingSecret &&
+    !verifyWebhookSignature(rawBody, request.headers, signingSecret)
+  )
+    return json({ error: "Invalid webhook signature" }, 401)
+  const envelope = asRecord(
+    (() => {
+      try {
+        return JSON.parse(rawBody) as unknown
+      } catch {
+        return null
+      }
+    })()
+  )
   const requestId = envelope.request_id
   const status = envelope.status
   if (

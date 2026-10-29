@@ -82,7 +82,27 @@ const text = (path: string): Case => ({ name: "text", path })
 
 const CASES: Record<string, Case[]> = {
   /* Image */
+  "ai-influencer": [
+    {
+      name: "human without references",
+      path: "higgsfield/ai-influencer",
+      prompt: "",
+    },
+    {
+      name: "animal with identity and item references",
+      path: "higgsfield/ai-influencer",
+      media: { start: 1, reference: 3 },
+      settings: { tier: "cats" },
+    },
+  ],
   "soul-2": [text("higgsfield-ai/soul/v2/standard")],
+  "soul-2-edit": [
+    {
+      name: "reference photo",
+      path: "higgsfield-ai/soul/v2/image-to-image",
+      media: { start: 1 },
+    },
+  ],
   "soul-cinema": [
     text("higgsfield-ai/soul/cinema"),
     {
@@ -183,6 +203,21 @@ const CASES: Record<string, Case[]> = {
   ],
 
   /* Video — create */
+  "kling-4": [
+    text("kling-video/v4.0/text-to-video"),
+    {
+      name: "ordered keyframes without a prompt",
+      path: "kling-video/v4.0/image-to-video",
+      media: { start: 1, reference: 2, end: 1 },
+      prompt: "",
+    },
+    {
+      name: "image and video references",
+      path: "kling-video/v4.0/reference-to-video",
+      media: { reference: 2, video: 1 },
+      settings: { aspectRatio: "adaptive", duration: 30 },
+    },
+  ],
   "seedance-2.5": [
     text("bytedance/seedance-2.5/text-to-video"),
     {
@@ -512,6 +547,13 @@ const CASES: Record<string, Case[]> = {
   ],
 
   /* Video — edit */
+  "kling-4-edit": [
+    {
+      name: "source with image and video references",
+      path: "kling-video/v4.0/video-edit",
+      media: { source: 1, reference: 1, video: 1 },
+    },
+  ],
   "seedance-2.5-edit": [
     {
       name: "source with references",
@@ -547,6 +589,14 @@ const CASES: Record<string, Case[]> = {
       name: "source with references",
       path: "higgsfield/genjutsu/object-swap/v1.0",
       media: { source: 1, reference: 2 },
+    },
+  ],
+  "genjutsu-light-swap": [
+    {
+      name: "source and replacement image",
+      path: "higgsfield/genjutsu-light/object-swap/v1.0",
+      media: { source: 1, reference: 1 },
+      prompt: "",
     },
   ],
 
@@ -588,6 +638,14 @@ const CASES: Record<string, Case[]> = {
       path: "higgsfield/genjutsu/motion-transfer/v1.0",
       media: { source: 1, reference: 8 },
       prompt: "",
+    },
+  ],
+  "genjutsu-light-motion": [
+    {
+      name: "motion video and character image",
+      path: "higgsfield/genjutsu-light/motion-transfer/v1.0",
+      media: { source: 1, reference: 1 },
+      settings: { resolution: "1080p" },
     },
   ],
 }
@@ -779,10 +837,13 @@ describe("catalog metadata", () => {
       it("cites docs pages", () => {
         expect(model.docs.length).toBeGreaterThan(0)
         for (const url of model.docs) {
-          expect(url.startsWith(DOCS_PREFIX)).toBe(true)
+          const isLegacyDocs = url.startsWith(DOCS_PREFIX)
+          expect(
+            isLegacyDocs || url.startsWith("https://open.higgsfield.ai/models/")
+          ).toBe(true)
           // Every cited page was crawled into _reference/docs/models.
           const page = `${url.slice(DOCS_PREFIX.length).replace("/", "__")}.md`
-          if (existsSync(CRAWLED))
+          if (isLegacyDocs && existsSync(CRAWLED))
             expect(existsSync(new URL(page, CRAWLED)), url).toBe(true)
         }
       })
