@@ -1,5 +1,24 @@
 # Vireo model catalog
 
+## 2026-10-30 discovery refresh
+
+The [current documentation index](https://docs.higgsfield.ai/docs/llms.txt)
+now directs model discovery to the [console model list](https://open.higgsfield.ai/explore)
+and each model's own API page. The September 26 inventory below is a snapshot,
+not a complete statement of today's public API. The following models were
+found in the October refresh; unresolved workflows stay out of the picker:
+
+| Model | Surface | Console endpoint(s) seen | Status |
+|---|---|---|---|
+| [Kling 4.0](https://open.higgsfield.ai/models/kling-video/v4.0/text-to-video/api-reference) | Video | `kling-video/v4.0/{text-to-video,image-to-video,reference-to-video,video-edit}` | Live in picker; all four mappers verified against the console API pages. Pricing uses the public maximum per second until account-specific prices are synced. |
+| [Genjutsu Light](https://open.higgsfield.ai/models/higgsfield/genjutsu-light/motion-transfer/v1.0/playground) | Video | `higgsfield/genjutsu-light/{motion-transfer,object-swap}/v1.0` | Live basic one-image flows; the model-specific reference limits remain unclear. Shared auth docs and v2 playground examples take precedence over a conflicting generic API reference. |
+| [AI Influencer](https://open.higgsfield.ai/models/higgsfield/ai-influencer/api-reference) | Image | `higgsfield/ai-influencer` | Live in picker: type, brief, identity photo and three item references. Advanced appearance selections are not exposed yet. |
+| [Ads Studio](https://open.higgsfield.ai/explore) | Image workflow | Console lists it, but a complete endpoint contract has not been checked | Unverified |
+
+The console has public starting prices, but account-specific pricing and access
+remain unverified without the owner's login. No new model is enabled on the
+strength of a listing alone.
+
 Source of truth for which Higgsfield models Vireo exposes, where each one's REST
 contract comes from, and why anything is left out.
 
@@ -26,11 +45,13 @@ of the picker · **Not in API** = exists only in Higgsfield's own app or agent/C
 API, not the public REST API · **v2** = documented but deliberately out of scope
 for v1 (§13 of the brief).
 
-## Image (11 picker entries → 15 endpoints)
+## Image (13 picker entries → 17 endpoints)
 
 | Picker id | Label | REST path(s) | Inputs / modes | Settings (UI → API) | Status |
 |---|---|---|---|---|---|
+| `ai-influencer` | AI Influencer | `higgsfield/ai-influencer` | optional character brief; one identity photo → `image_url`; up to three item images → `item_image_urls` | human/animal type → `tier`; fixed 2K 16:9 output | Live ([API page](https://open.higgsfield.ai/models/higgsfield/ai-influencer/api-reference)); advanced `selection` options pending |
 | `soul-2` | Soul 2 | `higgsfield-ai/soul/v2/standard` | prompt only | aspect 9:16·16:9·4:3·3:4·1:1·2:3·3:2 (1:1) → `aspect_ratio`; resolution 720p·1080p → `resolution`; batch 1·4 → `batch_size`; enhance → `enhance_prompt` | Live |
+| `soul-2-edit` | Soul 2 Edit | `higgsfield-ai/soul/v2/image-to-image` | prompt + required reference photo → `image_url` | aspect; 720p·1080p; batch 1·4; reference enhancement always on | Live ([API page](https://open.higgsfield.ai/models/higgsfield-ai/soul/v2/image-to-image/api-reference)) |
 | `soul-cinema` | Soul Cinema | `higgsfield-ai/soul/cinema` | prompt only | same as Soul 2 (fixed style) | Live (docs note: may be hidden from discovery, callable directly) |
 | `soul` | Soul | `higgsfield-ai/soul/standard` | prompt; optional 1 reference image → `image_reference_url` | aspect (4:3 default); resolution; batch 1·4; enhance | Live |
 | `marketing-image-flare` | Marketing Image 2.5 Flare | `marketing-studio/image/flare` | prompt; 0–16 reference images → `image_urls` | quality low·medium·high·xhigh·max (high); resolution 1k·2k·4k (2k); aspect auto·1:1·3:2·2:3·4:3·3:4·16:9·9:16·21:9 (auto) | Live |
@@ -42,13 +63,16 @@ for v1 (§13 of the brief).
 | `ideogram-4` | Ideogram 4.0 | `ideogram/v4.0` | prompt (2–2048 chars); optional 1 reference → `image_url` + `image_weight` | aspect (23); rendering speed TURBO·DEFAULT·QUALITY; image weight 1–100 (only with a reference) | Live |
 | `z-image-turbo` | Z-Image Turbo | `z-image/turbo` | prompt (≤800 chars) | resolution 1k·2k; aspect (10); prompt extend | Live |
 
-## Video (27 picker entries → 66 endpoints)
+## Video (31 picker entries → 72 endpoints)
 
 Generator tabs: **Create** (text/frames/references), **Edit** (a source video is
 required), **Motion** (motion transfer / motion control).
 
 | Picker id | Tab | Label | REST path(s) | Inputs / modes | Key settings | Status |
 |---|---|---|---|---|---|---|
+| `kling-4` | Create | Kling 4.0 | `kling-video/v4.0/{text-to-video,image-to-video,reference-to-video}` | text; first frame + ≤8 ordered middle frames + optional end; or ≤10 image and ≤5 video references | duration 3–30; 720p·1080p; aspect 21:9·16:9·9:16·1:1 (plus adaptive for references) | Live ([text](https://open.higgsfield.ai/models/kling-video/v4.0/text-to-video/api-reference), [image](https://open.higgsfield.ai/models/kling-video/v4.0/image-to-video/api-reference), [references](https://open.higgsfield.ai/models/kling-video/v4.0/reference-to-video/api-reference)) |
+| `kling-4-edit` | Edit | Kling 4.0 Edit | `kling-video/v4.0/video-edit` | source video required; ≤10 image and ≤5 video references | prompt required; duration 3–30; 720p·1080p; aspect including adaptive | Live ([API page](https://open.higgsfield.ai/models/kling-video/v4.0/video-edit/api-reference)) |
+| `genjutsu-light-motion` / `-swap` | Motion / Edit | Genjutsu Light | `higgsfield/genjutsu-light/{motion-transfer,object-swap}/v1.0` | source video ≥4 s + one image; first 15 s used | 480p·720p·1080p; optional prompt; billed by output duration | Live basic flow ([motion](https://open.higgsfield.ai/models/higgsfield/genjutsu-light/motion-transfer/v1.0/playground), [swap](https://open.higgsfield.ai/models/higgsfield/genjutsu-light/object-swap/v1.0/playground)) |
 | `seedance-2.5` | Create | Seedance 2.5 | `bytedance/seedance-2.5/{text-to-video,image-to-video,reference-to-video}` | frames (start → `image_url`, end → `end_image_url`) **or** references (≤30 img, ≤10 video, ≤10 audio, ≤50 total) | aspect (6, t2v/r2v only); duration 4–30; resolution 480p·720p; audio; bitrate standard·high | Live |
 | `seedance-2.5-edit` | Edit | Seedance 2.5 Edit | `bytedance/seedance-2.5/video-edit` | source video (required) + ≤9 video refs, ≤30 img, ≤10 audio; prompt required | resolution; audio; bitrate (no duration) | Live |
 | `seedance-2.5-extend` | Edit | Seedance 2.5 Extend | `bytedance/seedance-2.5/video-extend` | as Edit | duration 4–30; resolution; audio; bitrate | Live |

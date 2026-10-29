@@ -16,6 +16,51 @@ Newest decisions go at the bottom of each section.
 
 ## Sources and precedence
 
+### 2026-10-30 research refresh
+
+- The [documentation index](https://docs.higgsfield.ai/docs/llms.txt) now says
+  that the console and each model's own API page take priority for model
+  discovery. Its OpenAPI file is only supplementary; absence there does not
+  establish that a model is unavailable. The September catalog needs a full
+  re-audit against this newer source order before claiming all models.
+- The [webhook guide](https://docs.higgsfield.ai/docs/how-to/webhooks.md) now
+  documents Standard Webhooks signatures (`webhook-id`, `webhook-timestamp`,
+  `webhook-signature`) verified against a `whsec_` account signing secret and
+  the raw body. The webhook handler now verifies this signature when
+  `HF_WEBHOOK_SIGNING_SECRET` is set, and production requires that variable.
+  It keeps the URL token and authenticated status re-fetch as defense in depth. The
+  signing secret must be revealed in the owner's console settings; deliveries
+  remain unsigned until then, according to the guide.
+- The console publicly lists Kling 4.0, Genjutsu Light, AI Influencer, and Ads
+  Studio, which were absent from the September inventory. See the refresh at
+  the top of `docs/model-catalog.md`. The Genjutsu Light API reference currently
+  displays a generic Bearer-auth example that conflicts with the shared
+  `Authorization: Key` documentation and its own v2 playground snippet. The
+  basic flow follows the shared auth guide and v2 playground. We expose one
+  image reference per request until its full limit can be confirmed.
+- Kling 4.0's four workflows are now in the picker. Their console API pages
+  supply the request schemas; the public price range supplies a conservative
+  per-second maximum until account-specific `pricing:sync` can run. The UI
+  calls the image-to-video `image_urls` slot "middle frames" when a start
+  frame is present. Adaptive aspect is rejected for text-to-video because
+  that endpoint disallows it.
+- AI Influencer's documented base generation flow is in the image picker:
+  `tier`, optional `brief`, identity photo and up to three item references.
+  The API accepts an empty appearance `selection`. The dynamic options catalog
+  and advanced trait overrides need a dedicated character editor; those
+  controls are absent rather than being filled with invented values.
+- Soul 2's separate image-to-image workflow is now an Image Edit entry. Its
+  current [API page](https://open.higgsfield.ai/models/higgsfield-ai/soul/v2/image-to-image/api-reference)
+  requires `image_url` and a prompt; the reference enhancement flag is always
+  true. Soul ID conditioning remains v2 scope.
+- Genjutsu Light motion transfer and object swap use the console's documented
+  basic `prompt`, `video_url`, `image_urls`, `resolution` request shapes. Both
+  are billed conservatively at the undiscounted 480p/720p/1080p rates and a
+  15-second cap, with source duration measured when available.
+- Cloned current public reference repositories into ignored `_reference/`.
+  `app-templates` is at `2b6343a` and still has no LICENSE file. Read its
+  `AGENTS.md`, `layouts/AGENTS.md`, and `components/studio/AGENTS.md`.
+
 1. **Live docs win for API behavior, template wins for UI** (brief §0.3). Model
    files are written from the docs' per-workflow JSON schemas; the template's
    generic `imageModel()` / `videoModel()` defaults are *not* used for any
@@ -210,10 +255,10 @@ image, Plus 6 / 8, Ultra 8 / 12.
   720p/1080p so every workflow accepts the chosen value; Kling and MiniMax H3
   prompt limits (2,500 / 7,000) are enforced as hard limits although the docs
   say longer prompts are truncated; Ideogram `image_weight` defaults to 50.
-- **Webhook signatures:** the JS SDK v2 accepts `webhook.secret` but never
-  transmits it — it only appends `hf_webhook=<url>` (`src/v2/client.ts`,
-  `subscribe`). The `X-Webhook-Secret-Key` header belongs to the legacy v1
-  job-set API. So v2 deliveries carry no signature; we rely on the HMAC token in
-  the URL plus re-fetching the status. Revisit if the docs add a signature.
+- **Webhook signatures:** the September SDK snapshot only appended
+  `hf_webhook=<url>`, but the October webhook guide documents account-level
+  Standard Webhooks signatures. Production now requires the console's
+  `whsec_` secret and verifies the raw body, timestamp and signature before
+  processing. The URL token and authenticated status re-fetch remain in place.
 - **Accessibility:** secondary text is `#9a9b9d` (Quanta's `#828282` fails
   4.5:1 on card surfaces). Lighthouse accessibility: 97+ on the generators.

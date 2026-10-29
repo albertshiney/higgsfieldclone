@@ -1,5 +1,30 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`toPlatform: every model and input mode > ai-influencer > animal with identity and item references 1`] = `
+{
+  "body": {
+    "brief": "A lighthouse keeper climbs a spiral staircase at dusk, warm lamp light, slow push-in.",
+    "image_url": "https://media.example.com/start-1.png",
+    "item_image_urls": [
+      "https://media.example.com/reference-1.jpg",
+      "https://media.example.com/reference-2.jpg",
+      "https://media.example.com/reference-3.jpg",
+    ],
+    "tier": "cats",
+  },
+  "path": "higgsfield/ai-influencer",
+}
+`;
+
+exports[`toPlatform: every model and input mode > ai-influencer > human without references 1`] = `
+{
+  "body": {
+    "tier": "normal",
+  },
+  "path": "higgsfield/ai-influencer",
+}
+`;
+
 exports[`toPlatform: every model and input mode > cinema-studio-4 > references with direction 1`] = `
 {
   "body": {
@@ -37,6 +62,34 @@ exports[`toPlatform: every model and input mode > cinema-studio-4 > text 1`] = `
     "resolution": "720p",
   },
   "path": "higgsfield/cinema-studio/4.0",
+}
+`;
+
+exports[`toPlatform: every model and input mode > genjutsu-light-motion > motion video and character image 1`] = `
+{
+  "body": {
+    "image_urls": [
+      "https://media.example.com/reference-1.jpg",
+    ],
+    "prompt": "A lighthouse keeper climbs a spiral staircase at dusk, warm lamp light, slow push-in.",
+    "resolution": "1080p",
+    "video_url": "https://media.example.com/source-1.mp4",
+  },
+  "path": "higgsfield/genjutsu-light/motion-transfer/v1.0",
+}
+`;
+
+exports[`toPlatform: every model and input mode > genjutsu-light-swap > source and replacement image 1`] = `
+{
+  "body": {
+    "image_urls": [
+      "https://media.example.com/reference-1.jpg",
+    ],
+    "prompt": "",
+    "resolution": "720p",
+    "video_url": "https://media.example.com/source-1.mp4",
+  },
+  "path": "higgsfield/genjutsu-light/object-swap/v1.0",
 }
 `;
 
@@ -514,6 +567,72 @@ exports[`toPlatform: every model and input mode > kling-3-turbo > text 1`] = `
     "resolution": "720p",
   },
   "path": "kling-video/v3.0-turbo/text-to-video",
+}
+`;
+
+exports[`toPlatform: every model and input mode > kling-4 > image and video references 1`] = `
+{
+  "body": {
+    "aspect_ratio": "adaptive",
+    "duration": 30,
+    "image_urls": [
+      "https://media.example.com/reference-1.jpg",
+      "https://media.example.com/reference-2.jpg",
+    ],
+    "prompt": "A lighthouse keeper climbs a spiral staircase at dusk, warm lamp light, slow push-in.",
+    "resolution": "1080p",
+    "video_urls": [
+      "https://media.example.com/video-1.mp4",
+    ],
+  },
+  "path": "kling-video/v4.0/reference-to-video",
+}
+`;
+
+exports[`toPlatform: every model and input mode > kling-4 > ordered keyframes without a prompt 1`] = `
+{
+  "body": {
+    "duration": 10,
+    "end_image_url": "https://media.example.com/end-1.png",
+    "image_url": "https://media.example.com/start-1.png",
+    "image_urls": [
+      "https://media.example.com/reference-1.jpg",
+      "https://media.example.com/reference-2.jpg",
+    ],
+    "resolution": "1080p",
+  },
+  "path": "kling-video/v4.0/image-to-video",
+}
+`;
+
+exports[`toPlatform: every model and input mode > kling-4 > text 1`] = `
+{
+  "body": {
+    "aspect_ratio": "16:9",
+    "duration": 10,
+    "prompt": "A lighthouse keeper climbs a spiral staircase at dusk, warm lamp light, slow push-in.",
+    "resolution": "1080p",
+  },
+  "path": "kling-video/v4.0/text-to-video",
+}
+`;
+
+exports[`toPlatform: every model and input mode > kling-4-edit > source with image and video references 1`] = `
+{
+  "body": {
+    "aspect_ratio": "adaptive",
+    "duration": 10,
+    "image_urls": [
+      "https://media.example.com/reference-1.jpg",
+    ],
+    "prompt": "A lighthouse keeper climbs a spiral staircase at dusk, warm lamp light, slow push-in.",
+    "resolution": "1080p",
+    "video_url": "https://media.example.com/source-1.mp4",
+    "video_urls": [
+      "https://media.example.com/video-1.mp4",
+    ],
+  },
+  "path": "kling-video/v4.0/video-edit",
 }
 `;
 
@@ -1207,6 +1326,20 @@ exports[`toPlatform: every model and input mode > soul-2 > text 1`] = `
     "resolution": "720p",
   },
   "path": "higgsfield-ai/soul/v2/standard",
+}
+`;
+
+exports[`toPlatform: every model and input mode > soul-2-edit > reference photo 1`] = `
+{
+  "body": {
+    "aspect_ratio": "4:3",
+    "batch_size": 1,
+    "enhance_prompt": true,
+    "image_url": "https://media.example.com/start-1.png",
+    "prompt": "A lighthouse keeper climbs a spiral staircase at dusk, warm lamp light, slow push-in.",
+    "resolution": "720p",
+  },
+  "path": "higgsfield-ai/soul/v2/image-to-image",
 }
 `;
 

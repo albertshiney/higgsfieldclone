@@ -20,7 +20,9 @@ Operating Vireo in production. Everything below is idempotent unless noted.
 * `failed`, `nsfw`, `canceled` and timeouts refund exactly once (ledger key
   `{reason, refType, refId, bucket}`); the reconciler re-runs any refund that
   didn't land.
-* The webhook never trusts its payload — it re-fetches
+* The webhook verifies Standard Webhooks headers against the raw body when
+  `HF_WEBHOOK_SIGNING_SECRET` is configured (required in production). It also
+  checks the URL token and never trusts the payload — it re-fetches
   `GET /requests/{id}/status`.
 
 ### A run is stuck
@@ -96,6 +98,7 @@ item from Community and blocks re-publishing; **Dismiss** closes the reports.
 |---|---|
 | `AUTH_SECRET` | Rotating signs everyone out (database sessions stay, cookies become invalid). |
 | `HF_WEBHOOK_SECRET` | In-flight runs' webhook tokens stop verifying; the reconciler finishes them. |
+| `HF_WEBHOOK_SIGNING_SECRET` | Reveal or rotate in Higgsfield Console Settings. The previous signing key remains valid for 24 hours; update the app before it expires. |
 | `HF_CREDENTIALS` | Create the new key in the console first, deploy, then revoke the old key. |
 | `STRIPE_WEBHOOK_SECRET` | Roll in the Stripe dashboard; Stripe retries failed deliveries. |
 | `CRON_SECRET` | Update in Vercel; Vercel Cron sends the new value automatically. |
@@ -111,6 +114,7 @@ item from Community and blocks re-publishing; **Dismiss** closes the reports.
 ## Launch checklist
 
 - [ ] Every `(required)` variable in `.env.example` set in Production.
+- [ ] Reveal the Higgsfield `whsec_` webhook signing secret and set `HF_WEBHOOK_SIGNING_SECRET`.
 - [ ] `pnpm db:init` against the production database.
 - [ ] `pnpm pricing:sync` with the live key; no placeholder prices in admin.
 - [ ] Final plan prices and credit allowances in `lib/billing/plans.ts`; Stripe prices match.

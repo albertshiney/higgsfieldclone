@@ -114,7 +114,16 @@ const GENJUTSU_RES = {
 
 export const PLACEHOLDER_PRICING: PricingTable = {
   /* ── Image ── */
+  // Public fixed price: $0.05 per character sheet, before account discounts.
+  // https://open.higgsfield.ai/models/higgsfield/ai-influencer/api-reference
+  "higgsfield/ai-influencer": described({ usd: 0.05, per: "request" }),
   "higgsfield-ai/soul/v2/standard": output(0.09, SOUL),
+  // Public Soul 2 image-to-image range ends at $0.0057 per output image.
+  // https://open.higgsfield.ai/models/higgsfield-ai/soul/v2/image-to-image/playground
+  "higgsfield-ai/soul/v2/image-to-image": described({
+    usd: 0.0057,
+    per: "output",
+  }),
   "higgsfield-ai/soul/cinema": output(0.1, SOUL),
   "higgsfield-ai/soul/standard": output(0.08, SOUL),
   "marketing-studio/image": request(0.06, MS_QUALITY),
@@ -193,6 +202,13 @@ export const PLACEHOLDER_PRICING: PricingTable = {
   }),
 
   /* ── Kling ── */
+  // Console's public Kling 4.0 rates vary by duration, workflow and resolution.
+  // Charge the documented maximum for each workflow until the account-specific
+  // estimate is synced. https://open.higgsfield.ai/models/kling-video/v4.0/text-to-video/playground
+  "kling-video/v4.0/text-to-video": described({ usd: 0.1645, per: "second" }),
+  "kling-video/v4.0/image-to-video": described({ usd: 0.1645, per: "second" }),
+  "kling-video/v4.0/reference-to-video": described({ usd: 0.1645, per: "second" }),
+  "kling-video/v4.0/video-edit": described({ usd: 0.0987, per: "second" }),
   "kling-video/v3.0-turbo/text-to-video": second(0.06, {
     resolution: { "720p": 1, "1080p": 1.5 },
   }),
@@ -261,6 +277,23 @@ export const PLACEHOLDER_PRICING: PricingTable = {
   "wan/v2.6/reference-to-video": second(0.1, RES_480_1080),
 
   /* ── Studio models ── */
+  // Public undiscounted rate per output second: 480p $0.05, 720p $0.10,
+  // 1080p $0.20. Source is trimmed to 15 s; output follows its length.
+  // https://open.higgsfield.ai/models/higgsfield/genjutsu-light/motion-transfer/v1.0/playground
+  "higgsfield/genjutsu-light/motion-transfer/v1.0": described({
+    usd: 0.1,
+    per: "second",
+    defaultUnits: 15,
+    sourceLength: true,
+    factors: { resolution: { "480p": 0.5, "720p": 1, "1080p": 2 } },
+  }),
+  "higgsfield/genjutsu-light/object-swap/v1.0": described({
+    usd: 0.1,
+    per: "second",
+    defaultUnits: 15,
+    sourceLength: true,
+    factors: { resolution: { "480p": 0.5, "720p": 1, "1080p": 2 } },
+  }),
   "higgsfield/cinema-studio/4.0": described({
     usd: TOKEN_2025_720,
     per: "second",

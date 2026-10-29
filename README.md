@@ -1,10 +1,11 @@
 # Vireo — AI image & video studio
 
-Vireo is a production-grade studio for generating images and video with every
-model the [Higgsfield REST API](https://docs.higgsfield.ai) exposes: Seedance,
+Vireo is an AI studio for generating images and video with documented
+[Higgsfield REST API](https://docs.higgsfield.ai) workflows: Seedance,
 Kling, Wan, Soul, Cinema Studio, Genjutsu, MiniMax, LTX, PixVerse, Grok,
-Recraft, Qwen, Ideogram and more — **47 picker entries covering 81 documented
-endpoints**. Users sign in with a magic link, pay with Stripe credits, and keep
+Recraft, Qwen, Ideogram and more — **53 picker entries covering 89 documented
+endpoints** as of the October 2026 catalog refresh. Newly discovered workflows
+that still need full verification are listed in `docs/model-catalog.md`. Users sign in with a magic link, pay with Stripe credits, and keep
 everything in a personal library. The UX follows higgsfield.ai (dark UI, lime
 accent, generator panel, justified feeds); the brand, copy and media are ours.
 
@@ -57,7 +58,7 @@ reconciler runs in-process every 5 s because there is no cron or webhook tunnel.
 | MongoDB Atlas | `MONGODB_URI`, `MONGODB_DB` | Any replica set (Atlas M0 works). Run `pnpm db:init` against it. |
 | Resend | `AUTH_RESEND_KEY`, `EMAIL_FROM` | Verify the sending domain first. |
 | Higgsfield | `HF_API_BASE_URL=https://api.higgsfield.ai`, `HF_CREDENTIALS=key_id:key_secret` | Keys from [console.higgsfield.ai](https://console.higgsfield.ai). Then run `pnpm pricing:sync`. |
-| Webhooks | `HF_WEBHOOK_SECRET`, `HF_WEBHOOK_BASE_URL` | Public HTTPS origin. Locally: `cloudflared tunnel --url http://localhost:3000` and put the URL here. |
+| Webhooks | `HF_WEBHOOK_SECRET`, `HF_WEBHOOK_SIGNING_SECRET`, `HF_WEBHOOK_BASE_URL` | Public HTTPS origin; reveal the `whsec_` signing secret in Console Settings. Locally: `cloudflared tunnel --url http://localhost:3000` and put the URL here. |
 | Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*` | Create 6 recurring prices (3 plans × month/year) and 3 one-time top-up prices. |
 | R2 | `R2_*` | Public bucket or custom domain for `R2_PUBLIC_BASE_URL`; CORS: allow GET from your origin. |
 
