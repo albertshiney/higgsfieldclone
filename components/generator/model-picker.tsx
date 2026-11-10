@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { Check, Search, Sparkle, X } from "lucide-react"
 
 import { useApp } from "@/components/providers/app-providers"
+import { DialogTrigger } from "@/components/ui/dialog"
 import type { ModelBadge, ModelEntry } from "@/generation/catalog/types"
 import { familyCover } from "@/lib/showcase"
 import { cn } from "@/lib/utils"
@@ -85,7 +86,12 @@ export function ModelPicker({
     return [...byFamily.entries()]
   }, [models, query])
   const featured = useMemo(
-    () => models.filter((model) => model.badges?.includes("TOP")).slice(0, 3),
+    () =>
+      models
+        .filter(
+          (model) => model.surface !== "video" && model.badges?.includes("TOP")
+        )
+        .slice(0, 3),
     [models]
   )
 
@@ -97,7 +103,7 @@ export function ModelPicker({
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
-      <DialogPrimitive.Trigger render={trigger} />
+      <DialogTrigger render={trigger} />
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/60 duration-150 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
         <DialogPrimitive.Popup className="glass fixed inset-x-0 bottom-0 z-50 flex max-h-[88dvh] flex-col overflow-hidden rounded-t-3xl duration-200 outline-none sm:inset-auto sm:top-1/2 sm:left-1/2 sm:max-h-[min(760px,calc(100dvh-4rem))] sm:w-[min(900px,calc(100vw-3rem))] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl data-open:animate-in data-open:slide-in-from-bottom-8 sm:data-open:zoom-in-95">

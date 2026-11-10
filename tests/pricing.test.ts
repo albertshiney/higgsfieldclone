@@ -147,14 +147,17 @@ describe("priceFor", () => {
     ).toThrow(/duration/)
   })
 
-  it("has a price for every catalog model", () => {
+  it("has a static price for every Higgsfield catalog model", () => {
     const missing = MODELS.filter(
-      (model) => fromPrice(model.id, table) === null
+      (model) =>
+        model.apiProvider !== "muapi" &&
+        model.apiProvider !== "sume" &&
+        fromPrice(model.id, table) === null
     ).map((model) => model.id)
     expect(missing).toEqual([])
   })
 
-  it("has a rule for every endpoint a model can reach", () => {
+  it("has a static rule for every Higgsfield endpoint a model can reach", () => {
     const base = { id: "p", url: "https://example.com/x", durationSec: 5 }
     const trials: Record<string, MediaItem[]>[] = [
       {},
@@ -172,7 +175,9 @@ describe("priceFor", () => {
       { source: [{ ...base, role: "source", kind: "video" }] },
     ]
     const unpriced = new Set<string>()
-    for (const model of MODELS) {
+    for (const model of MODELS.filter(
+      (model) => model.apiProvider !== "muapi" && model.apiProvider !== "sume"
+    )) {
       const defaults = Object.fromEntries(
         Object.entries(model.settings).map(([k, f]) => [k, f.default])
       )

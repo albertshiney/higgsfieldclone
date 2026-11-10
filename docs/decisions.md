@@ -50,7 +50,7 @@ Newest decisions go at the bottom of each section.
 | LTX-2.5 | `t2v()` helper cannot derive the i2v path (path ends in `/fast`) | `…/image-to-video/{fast,pro}` with `end_image_url`; duration ∈ {6,8,10}; fps | Custom mapper with i2v. |
 | MiniMax H3, Happy Horse, Wan 2.7, Wan 3.0, PixVerse | text + generic image path only | reference-to-video workflows, end frames, model-specific ranges | Custom mappers per docs. |
 | Cinema Studio 4.0, Genjutsu, Marketing Studio Image, Soul (v1) | missing | documented | Added. |
-| Seedance 2.5 text-to-video page | — | one page of 81 was not re-read after a tool-permission denial; the endpoint is confirmed by the family page's workflow table and the template mapper | Uses the template mapper (`aspect_ratio`, `duration`, `resolution`, `generate_audio`, `bitrate_mode`), the same fields the sibling i2v/r2v pages document. Re-verify when convenient. |
+| Seedance 2.5 text-to-video page | Previously pending direct verification | Official model API reference read on 2026-10-21 | Standalone SDK example uses the verified prompt, duration 5, resolution 720p, and aspect_ratio 16:9 fields. Live submission returned HTTP 403 with a zero API balance. |
 
 ## Architecture
 
@@ -60,10 +60,10 @@ Newest decisions go at the bottom of each section.
   (`generation/platform.ts`) moved to `lib/higgsfield/client.ts` with
   `server-only`, retries (429/5xx with exponential backoff + full jitter, max 3,
   8 s deadline) for **status/cancel/estimate/upload** only. Submits are **not**
-  auto-retried after an ambiguous failure because the docs say submissions do
-  not accept an idempotency key; ambiguous submits stay `pending_submit` for the
+  auto-retried after an ambiguous failure; ambiguous submits stay `pending_submit` for the
   reconciler. (Chosen over `@higgsfield/client` v2: fewer moving parts, and the
   template's client already matches the documented contract.)
+- **Standalone SDK example:** root index.ts uses @higgsfield/client v2 for the explicitly requested Seedance demonstration. This does not migrate the studio REST client. Runtime secrets come from Infisical; the example never retries submissions.
 - **Double-submit guard:** the generation document is created (and credits
   debited) in one transaction *before* the platform call, with a unique
   `submitKey` (client-generated UUID per Generate press). A second press with
@@ -78,7 +78,7 @@ Newest decisions go at the bottom of each section.
   filesystem driver under `.data/media` served by `/api/media/[...key]`
   (development only; production boot fails without R2 env).
 - **Email in dev:** without `AUTH_RESEND_KEY` in development, magic links are
-  printed to the server log. Production boot fails without it.
+  stored in the local development mailbox without logging the link. Production boot fails without it.
 - **Env validation:** `lib/env.ts` (zod) validates at boot; production requires
   every service key, development allows the documented fallbacks and prints
   one warning line per fallback.
@@ -190,7 +190,7 @@ image, Plus 6 / 8, Ultra 8 / 12.
   up to the plan limit); Cancel lives on the queued tile's hover rail.
 - **Audio surface** is complete but hidden (nav + `/audio` 404) until an audio
   model exists — the REST API documents none.
-- **Local development** runs with no external service: `pnpm db:dev` (MongoDB
+- **Isolated fixture development** runs with no external service: `pnpm db:dev` (MongoDB
   replica set via mongodb-memory-server binaries), `pnpm mock:higgsfield`
   (documented request shapes), dev mailbox for magic links, local media
   storage, in-process reconciler (`instrumentation.ts`).
@@ -217,3 +217,15 @@ image, Plus 6 / 8, Ultra 8 / 12.
   the URL plus re-fetching the status. Revisit if the docs add a signature.
 - **Accessibility:** secondary text is `#9a9b9d` (Quanta's `#828282` fails
   4.5:1 on card surfaces). Lighthouse accessibility: 97+ on the generators.
+
+- **MuAPI** uses the shared generation lifecycle with a persisted provider. Legacy rows remain Higgsfield. Six verified text-to-video models are mapped in muapi-budget.ts.
+- **Cost approval** binds the user and canonical request to an expiring signed dollar and credit ceiling. Re-estimate before debit; default maximum estimate is $0.50. Provider final billing is outside this estimate guard.
+- **Uncertain MuAPI submissions** hold credits for manual review. Do not retry or force-refund on local timeouts. External cancellation and webhook authentication are unverified, so use polling. See [MuAPI reference](muapi.md).
+
+## Sume cutover, 2026-10-23
+
+Sume is the default for new live requests. The shared lifecycle and persisted provider preserve existing jobs. Only verified installed Sume model/mode/settings are selectable; alternative providers are disabled for new live requests until a documented coverage exception is implemented. Seven installed catalog entries cover image create/edit, four budget video models and video lip sync. Remaining Sume tools are unavailable rather than silently rerouted. See sume.md for contracts and verification limits.
+
+## Dependency verification, November 5, 2026
+
+Next.js and eslint-config-next are pinned to 16.4.1. Zod requires at least 4.6.6. pnpm overrides keep follow-redirects at 1.16.2 or newer and ip-address at 10.7.4 or newer. The production audit retains one low-severity unpatched deepmerge advisory through the email renderer, tracked as BOOZI-60. Do not suppress the advisory or invent a patched version.

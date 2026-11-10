@@ -10,7 +10,7 @@ import {
   type GenerationDoc,
   type GenerationOutput,
 } from "@/lib/db/collections"
-import { higgsfield } from "@/lib/higgsfield/client"
+import { generationClient } from "@/lib/providers/client"
 import { describeTerminal } from "@/lib/higgsfield/errors"
 import {
   PLATFORM_TERMINAL,
@@ -42,15 +42,16 @@ export type FinalizeOutcome =
   | "refunded"
   | "copy_retry"
 
-type Deps = { status: typeof higgsfieldStatus; copy: typeof copyFromUrl }
-
-async function higgsfieldStatus(requestId: string) {
-  return higgsfield().status(requestId)
+type Deps = {
+  status?: (
+    requestId: string
+  ) => Promise<import("@/lib/higgsfield/types").RequestStatus>
+  copy: typeof copyFromUrl
 }
 
 export async function finalizeGeneration(
   generationId: ObjectId,
-  deps: Deps = { status: higgsfieldStatus, copy: copyFromUrl }
+  deps: Deps = { copy: copyFromUrl }
 ): Promise<FinalizeOutcome> {
   const { generations } = await collections()
   const gen = await generations.findOne({ _id: generationId })
@@ -58,7 +59,19 @@ export async function finalizeGeneration(
   if (!IN_FLIGHT.includes(gen.status)) return "already_terminal"
   if (!gen.hfRequestId) return "not_submitted"
 
-  const status = await deps.status(gen.hfRequestId)
+  const status = await (deps.status
+    ? deps.status(gen.hfRequestId)
+    : generationClient(gen.provider).status(gen.hfRequestId))
+  if (status.costUsd !== undefined)
+    await generations.updateOne(
+      { _id: gen._id },
+      {
+        $set: {
+          providerCostUsd: status.costUsd,
+          providerRefunded: status.providerRefunded === true,
+        },
+      }
+    )
   if (!PLATFORM_TERMINAL.has(status.status)) {
     const next = status.status === "in_progress" ? "in_progress" : gen.status
     await generations.updateOne(
@@ -143,8 +156,6 @@ export async function finalizeGeneration(
       $unset: { finalizeLeaseUntil: "" },
     }
   )
-  // Failed, blocked and canceled runs aren't charged by the platform, so
-  // neither are users. Idempotent: a second call finds nothing outstanding.
   if (committed) await refundGeneration(gen._id, "generation_refund")
   return "refunded"
 }
@@ -180,7 +191,7 @@ async function copyOutputs(
         error instanceof Error ? error.message : error
       )
       if (gen.finalizeAttempts < MAX_COPY_ATTEMPTS) return null
-      // Keep the platform URL (retained ≥ 7 days); the reconciler retries the copy.
+      // The provider controls URL expiry; retry the copy rather than discard it.
       outputs.push({
         kind,
         url: artifact.url,

@@ -4,8 +4,9 @@ import type { ObjectId } from "mongodb"
 
 import { NotFoundError, UserFacingError } from "@/lib/errors"
 import { collections } from "@/lib/db/collections"
-import { higgsfield, PlatformError } from "@/lib/higgsfield/client"
+import { PlatformError } from "@/lib/higgsfield/client"
 
+import { generationClient } from "@/lib/providers/client"
 import { finalizeGeneration } from "./finalize"
 
 /**
@@ -33,7 +34,7 @@ export async function cancelGeneration(
       "NOT_CANCELABLE"
     )
   try {
-    await higgsfield().cancel(gen.hfRequestId!)
+    await generationClient(gen.provider).cancel(gen.hfRequestId!)
   } catch (caught) {
     if (caught instanceof PlatformError && caught.status === 400) {
       await generations.updateOne(

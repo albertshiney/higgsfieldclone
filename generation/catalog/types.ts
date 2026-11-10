@@ -61,6 +61,7 @@ export type PlatformRequest = { path: string; body: Record<string, unknown> }
 export type ModelEntry = {
   id: string
   surface: Surface
+  apiProvider?: "higgsfield" | "muapi" | "sume"
   label: string
   roles: Partial<Record<MediaRole, number>>
   mediaModes?: MediaMode[]

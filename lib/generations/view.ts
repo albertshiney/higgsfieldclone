@@ -29,6 +29,7 @@ export interface GenerationView {
   status: GenerationStatusView
   cost: number
   refunded: number
+  canCancel?: boolean
   outputs: OutputView[]
   aspect: number
   error?: string

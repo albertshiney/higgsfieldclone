@@ -123,3 +123,7 @@ Predictor · Multi-image to 3D · all audio models above.
 | Soul ID (character training) | `POST /v1/custom-references`, `GET /v1/custom-references/{id}` | Extension point: `characters` collection + `custom_reference_id` on Soul entries |
 | Marketing Studio `enhance_prompt` | requires `preset_id` from `GET /marketing-studio/image/presets` | v1 sends `enhance_prompt: false` |
 | Kling `elements`, `multi_prompt` | per-account element ids / custom shots | v1 sends single-shot requests; `multi_shots` toggle keeps the top-level duration |
+
+## Current Sume defaults
+
+The legacy catalog above remains installed for existing jobs and fixtures. New live submissions use the seven Sume entries documented in [sume.md](sume.md). The server disables other providers before quoting, debit or submission. No alternative-provider coverage exceptions are approved. Seedance 2.5 remains blocked.

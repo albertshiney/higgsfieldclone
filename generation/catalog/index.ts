@@ -4,6 +4,24 @@ import type { GeneratorTab, ModelEntry, Surface } from "./types"
 
 export { MODELS }
 
+const VIDEO_PREFERENCES = [
+  "sume-seedance-2-mini",
+  "sume-minimax-h3-max",
+  "sume-minimax-h3",
+  "sume-seedance-2-fast",
+  "sume-gpt-image-2",
+  "sume-gpt-image-2-edit",
+  "sume-veed-lipsync",
+  "muapi-h3-max-turbo",
+  "muapi-h3-max",
+  "muapi-seedance-mini",
+  "muapi-wan25-fast",
+  "minimax-h3",
+  "wan-2.6",
+  "seedance-2",
+  "hailuo-2.3",
+]
+
 export const SURFACES: readonly Surface[] = ["image", "video", "audio"]
 
 export function findModel(id: string): ModelEntry | undefined {
@@ -17,9 +35,13 @@ export function getModel(id: string): ModelEntry {
 }
 
 export function modelsFor(surface: Surface, tab?: GeneratorTab): ModelEntry[] {
+  const preferred = new Map(VIDEO_PREFERENCES.map((id, index) => [id, index]))
   return MODELS.filter(
     (entry) =>
       entry.surface === surface && (!tab || (entry.tab ?? "create") === tab)
+  ).sort(
+    (a, b) =>
+      (preferred.get(a.id) ?? Infinity) - (preferred.get(b.id) ?? Infinity)
   )
 }
 

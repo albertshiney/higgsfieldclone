@@ -9,6 +9,7 @@ import { Check, Copy, Download, X } from "lucide-react"
 import type { TileAction } from "@/components/studio/gallery/gallery-types"
 import { settingLabel } from "@/components/studio/settings-dialog"
 import { Button } from "@/components/ui/button"
+import { DialogTrigger } from "@/components/ui/dialog"
 import { downloadMedia } from "@/lib/studio/download-media"
 import { cn } from "@/lib/utils"
 
@@ -84,7 +85,7 @@ export function GenerationDetailModal({
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
-      <DialogPrimitive.Trigger render={trigger} />
+      <DialogTrigger render={trigger} />
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-[#131416] duration-150 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
         <DialogPrimitive.Popup className="fixed inset-0 z-50 flex flex-col duration-150 outline-none md:flex-row data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0">

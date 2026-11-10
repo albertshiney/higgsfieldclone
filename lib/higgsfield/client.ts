@@ -160,8 +160,10 @@ export function createHiggsfieldClient(options: ClientOptions) {
     async submit(
       path: string,
       body: Record<string, unknown>,
-      webhookUrl?: string
+      webhookUrl?: string,
+      ...providerOptions: unknown[]
     ): Promise<QueuedRequest> {
+      void providerOptions
       if (!isModelPath(path))
         throw new PlatformError(400, { detail: "Invalid model path" })
       const query = webhookUrl

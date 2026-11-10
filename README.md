@@ -1,65 +1,39 @@
-# Vireo — AI image & video studio
+# KabOozi-MotiOn
 
-Vireo is a production-grade studio for generating images and video with every
-model the [Higgsfield REST API](https://docs.higgsfield.ai) exposes: Seedance,
-Kling, Wan, Soul, Cinema Studio, Genjutsu, MiniMax, LTX, PixVerse, Grok,
-Recraft, Qwen, Ideogram and more — **47 picker entries covering 81 documented
-endpoints**. Users sign in with a magic link, pay with Stripe credits, and keep
-everything in a personal library. The UX follows higgsfield.ai (dark UI, lime
-accent, generator panel, justified feeds); the brand, copy and media are ours.
+KabOozi-MotiOn is an image and video studio with Sume as the default for new live requests. Seven installed Sume entries cover image generation/editing, budget video models, and video lip sync. Existing Higgsfield and MuAPI jobs keep their original provider.
 
-| Concern | Choice |
-|---|---|
-| Framework | Next.js 16 (App Router, Turbopack), React 19, TypeScript strict |
-| UI | Tailwind v4 + shadcn (Base UI), Quanta tokens, lucide, zustand, @tanstack/react-virtual — scaffolded from [`higgsfield-ai/app-templates`](https://github.com/higgsfield-ai/app-templates) |
-| Auth | Auth.js v5 (`next-auth@5`), magic links via Resend, database sessions |
-| Email | Resend + React Email (`emails/`) |
-| Database | MongoDB (Atlas replica set) — one client shared by the Auth.js adapter and the app |
-| Payments | Stripe Checkout, Billing, Customer Portal, webhooks |
-| Generation | Higgsfield REST API, one server-side key |
-| Media | Cloudflare R2 (every output is copied; the platform keeps outputs ≥ 7 days) |
+The application uses Next.js, React, TypeScript, pnpm, MongoDB, Auth.js, and optional Stripe/R2 services. Credentials are injected from Infisical. See [Sume runtime](docs/sume.md) for model availability, pricing safeguards, and verification limits.
 
-## Quick start (fully offline)
+## Local setup with Infisical
 
-Nothing external is needed to run the whole product locally: a local MongoDB
-replica set, a mock Higgsfield API and a dev mailbox stand in for the services.
+Development settings live in the KabOozi-MotiOn Infisical project, environment
+`dev`, folder `/`. The Windows account uses the existing Infisical CLI login.
+Real credentials must stay in Infisical. Do not copy them into a plaintext env file.
 
-```bash
-pnpm install
-cp .env.example .env.local      # then fill AUTH_SECRET: openssl rand -base64 32
+```powershell
+pnpm install --frozen-lockfile
+pnpm config:check
+pnpm dev:local
 ```
 
-In three terminals:
+Open http://localhost:3000. The launcher starts the local MongoDB replica set
+and mock generation service when needed, initializes the database, and serves
+the studio on loopback. It reuses services already listening on their ports.
+New generation requests use the live Sume API with explicit dollar approval and a $0.50 estimate cap. Signup grants are zero in the live configuration. Fixture tests use separate loopback providers and dummy keys. See [docs/sume.md](docs/sume.md) for installed Sume models and verification limits.
 
-```bash
-pnpm db:dev            # MongoDB replica set on :27027 (data in .data/mongo)
-pnpm mock:higgsfield   # mock platform on :4010 ("[fail]", "[nsfw]", "[slow]" in a prompt steer outcomes)
-pnpm dev               # http://localhost:3000
-```
-
-Once, after the database is up:
-
-```bash
-pnpm db:init --admin=you@example.com   # indexes + Effects presets (+ admin role)
-```
-
-For offline development set in `.env.local`:
-`MONGODB_URI=mongodb://127.0.0.1:27027/?replicaSet=vireo`,
-`HF_API_BASE_URL=http://localhost:4010`, `HF_CREDENTIALS=mock:mock`,
-`SIGNUP_BONUS_CREDITS=200`, `E2E_TEST_MODE=true`. Magic links are printed to the
-dev-server log (no Resend key needed); media is stored under `.data/media`; the
-reconciler runs in-process every 5 s because there is no cron or webhook tunnel.
+See [docs/setup.md](docs/setup.md) for the actual vault metadata, restart steps,
+transcript analysis, verification, and remaining live-service setup.
 
 ## Real services
 
-| Service | What to set | Notes |
-|---|---|---|
-| MongoDB Atlas | `MONGODB_URI`, `MONGODB_DB` | Any replica set (Atlas M0 works). Run `pnpm db:init` against it. |
-| Resend | `AUTH_RESEND_KEY`, `EMAIL_FROM` | Verify the sending domain first. |
-| Higgsfield | `HF_API_BASE_URL=https://api.higgsfield.ai`, `HF_CREDENTIALS=key_id:key_secret` | Keys from [console.higgsfield.ai](https://console.higgsfield.ai). Then run `pnpm pricing:sync`. |
-| Webhooks | `HF_WEBHOOK_SECRET`, `HF_WEBHOOK_BASE_URL` | Public HTTPS origin. Locally: `cloudflared tunnel --url http://localhost:3000` and put the URL here. |
-| Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*` | Create 6 recurring prices (3 plans × month/year) and 3 one-time top-up prices. |
-| R2 | `R2_*` | Public bucket or custom domain for `R2_PUBLIC_BASE_URL`; CORS: allow GET from your origin. |
+| Service       | What to set                                                                     | Notes                                                                                                |
+| ------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| MongoDB Atlas | `MONGODB_URI`, `MONGODB_DB`                                                     | Any replica set (Atlas M0 works). Run `pnpm db:init` against it.                                     |
+| Resend        | `AUTH_RESEND_KEY`, `EMAIL_FROM`                                                 | Verify the sending domain first.                                                                     |
+| Higgsfield    | `HF_API_BASE_URL=https://api.higgsfield.ai`, `HF_CREDENTIALS=key_id:key_secret` | Keys from [console.higgsfield.ai](https://console.higgsfield.ai). Then run `pnpm pricing:sync`.      |
+| Webhooks      | `HF_WEBHOOK_SECRET`, `HF_WEBHOOK_BASE_URL`                                      | Public HTTPS origin. Locally: `cloudflared tunnel --url http://localhost:3000` and put the URL here. |
+| Stripe        | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_*`                  | Create 6 recurring prices (3 plans × month/year) and 3 one-time top-up prices.                       |
+| R2            | `R2_*`                                                                          | Public bucket or custom domain for `R2_PUBLIC_BASE_URL`; CORS: allow GET from your origin.           |
 
 Local Stripe webhooks:
 
@@ -67,7 +41,7 @@ Local Stripe webhooks:
 stripe listen --forward-to localhost:3000/api/webhooks/stripe
 ```
 
-Copy the printed `whsec_…` into `STRIPE_WEBHOOK_SECRET`. Test cards: `4242 4242 4242 4242`.
+Store the listener signing secret as `STRIPE_WEBHOOK_SECRET` in the appropriate Infisical environment. Test cards: `4242 4242 4242 4242`.
 
 ### Pricing
 
@@ -88,17 +62,17 @@ submit against the live estimate (`HF_PRICE_GUARD`). Details:
 
 ## Commands
 
-| Command | What it does |
-|---|---|
-| `pnpm dev` | Dev server (regenerates the model barrel on change) |
-| `pnpm build` | Production build + client-bundle secret scan |
-| `pnpm typecheck` / `pnpm lint` | `tsc --noEmit` / ESLint |
-| `pnpm test` | Vitest: catalog snapshots (every model), pricing, ledger, lifecycle, webhooks (in-memory MongoDB replica set) |
-| `pnpm test:e2e` | Playwright against a running stack (`E2E_BASE_URL` for a preview deploy) |
-| `pnpm models` | Regenerate `generation/catalog/models.generated.ts` |
-| `pnpm db:dev` / `pnpm db:init` | Local MongoDB / indexes + preset seed |
-| `pnpm mock:higgsfield` | Local mock of the Higgsfield REST API |
-| `pnpm pricing:sync` | Derive prices from the estimate endpoint |
+| Command                        | What it does                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                     | Infisical-backed local launcher                                                                               |
+| `pnpm build`                   | Production build + client-bundle secret scan                                                                  |
+| `pnpm typecheck` / `pnpm lint` | `tsc --noEmit` / ESLint                                                                                       |
+| `pnpm test`                    | Vitest: catalog snapshots (every model), pricing, ledger, lifecycle, webhooks (in-memory MongoDB replica set) |
+| `pnpm test:e2e`                | Playwright against a running stack (`E2E_BASE_URL` for a preview deploy)                                      |
+| `pnpm models`                  | Regenerate `generation/catalog/models.generated.ts`                                                           |
+| `pnpm db:dev` / `pnpm db:init` | Local MongoDB / indexes + preset seed                                                                         |
+| `pnpm mock:higgsfield`         | Local mock of the Higgsfield REST API                                                                         |
+| `pnpm pricing:sync`            | Derive prices from the estimate endpoint                                                                      |
 
 ## Adding a model
 
@@ -134,7 +108,7 @@ Key files: `lib/generations/{submit,finalize,reconcile,cancel}.ts`,
 ## Deployment (Vercel)
 
 1. Create the Atlas cluster, R2 bucket, Resend domain and Stripe products.
-2. Set every `(required)` variable from `.env.example` in Vercel (Production + Preview).
+2. Configure an Infisical-supported secret sync or scoped runtime injection for each deployment environment. Keep Production and Preview credentials separate.
 3. `vercel.json` schedules `/api/cron/reconcile` every minute (send `CRON_SECRET`).
 4. Stripe webhook endpoint: `https://<domain>/api/webhooks/stripe` with events
    `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
@@ -147,3 +121,5 @@ docs-vs-template disagreement, and `docs/model-catalog.md` for the model table.
 
 The Studio UI is adapted from `higgsfield-ai/app-templates` (no LICENSE file
 as of 2026-09-26 — re-check before launch; see `docs/decisions.md`).
+
+MuAPI budget routes and dollar approval are documented in [docs/muapi.md](docs/muapi.md). Add its key through Infisical to enable those models. Verification uses loopback fixtures and never submits paid requests automatically.

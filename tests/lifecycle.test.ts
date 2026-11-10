@@ -419,6 +419,22 @@ describe("pricing on the live platform", () => {
       process.env.HF_API_BASE_URL = "https://api.higgsfield.ai"
       resetEnvForTests()
       const live = await pricingContext(true)
+      expect([...live.disabled]).toEqual(
+        expect.arrayContaining([
+          "seedance-2.5",
+          "seedance-2.5-edit",
+          "seedance-2.5-extend",
+        ])
+      )
+      const user = await createUser({ subscription: 1000, topup: 0 })
+      await expect(
+        submitGeneration(user, image({ modelId: "seedance-2.5" }))
+      ).rejects.toMatchObject({ code: "MODEL_DISABLED" })
+      expect(fake.submits).toHaveLength(0)
+      expect(await balanceOf(user.objectId)).toEqual({
+        subscription: 1000,
+        topup: 0,
+      })
       expect(live.credits["kling-video/motion-control/std"]).toBeUndefined()
       expect(live.placeholderPaths).toContain("kling-video/motion-control/std")
       expect(live.credits["bytedance/seedance-2.5/text-to-video"]).toBeDefined()

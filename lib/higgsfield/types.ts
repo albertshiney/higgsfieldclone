@@ -12,6 +12,7 @@ export const PLATFORM_TERMINAL: ReadonlySet<string> = new Set([
 export type QueuedRequest = {
   status: string
   requestId: string
+  costUsd?: number
   statusUrl: string
   cancelUrl: string
 }
@@ -26,6 +27,8 @@ export type RequestStatus = {
   status: string
   requestId: string
   artifacts: PlatformArtifact[]
+  costUsd?: number
+  providerRefunded?: boolean
   error?: string
 }
 

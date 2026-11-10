@@ -2,7 +2,7 @@ import "server-only"
 
 import { MODELS } from "@/generation/catalog"
 import { collections } from "@/lib/db/collections"
-import { env } from "@/lib/env"
+import { env, providerFixtureMode } from "@/lib/env"
 
 import { creditConfig } from "./config"
 import { fromPrice, toCreditTable, type CreditTable } from "./price"
@@ -32,7 +32,19 @@ let cached: { at: number; value: PricingContext } | undefined
 export async function pricingContext(fresh = false): Promise<PricingContext> {
   if (!fresh && cached && Date.now() - cached.at < TTL_MS) return cached.value
   const usd: PricingTable = { ...PRICING_TABLE }
-  const disabled = new Set<string>()
+  const disabled = new Set<string>(
+    livePlatform()
+      ? ["seedance-2.5", "seedance-2.5-edit", "seedance-2.5-extend"]
+      : []
+  )
+  for (const model of MODELS) {
+    if (!providerFixtureMode() && model.apiProvider !== "sume")
+      disabled.add(model.id)
+    if (model.apiProvider === "sume" && !env().SUME_API_KEY)
+      disabled.add(model.id)
+    if (model.apiProvider === "muapi" && !env().MUAPI_API_KEY)
+      disabled.add(model.id)
+  }
   try {
     const { modelPricing } = await collections()
     for (const doc of await modelPricing.find({}).toArray()) {
@@ -79,6 +91,7 @@ export type ClientPricing = {
   table: CreditTable
   disabled: string[]
   fromPrices: Record<string, number>
+  live: boolean
 }
 
 export async function clientPricing(): Promise<ClientPricing> {
@@ -92,5 +105,6 @@ export async function clientPricing(): Promise<ClientPricing> {
     table: context.credits,
     disabled: [...context.disabled],
     fromPrices,
+    live: livePlatform(),
   }
 }

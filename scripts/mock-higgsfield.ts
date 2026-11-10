@@ -19,6 +19,9 @@ import {
 } from "node:http"
 import { extname, join } from "node:path"
 
+import { usdForRequest } from "../lib/billing/price"
+import { PRICING_TABLE } from "../lib/billing/pricing-table"
+
 const PORT = Number(process.env.MOCK_HF_PORT ?? 4010)
 const BASE = `http://localhost:${PORT}`
 const PUBLIC = join(process.cwd(), "public", "media")
@@ -199,8 +202,16 @@ const server = createServer(async (req, res) => {
       request.status = "canceled"
       return send(res, 202)
     }
-    if (method === "POST" && url.pathname.startsWith("/estimate/"))
-      return send(res, 200, { credits: "1.000", usd: "0.010" })
+    if (method === "POST" && url.pathname.startsWith("/estimate/")) {
+      const path = url.pathname.slice("/estimate/".length)
+      const rule = PRICING_TABLE[path]
+      if (!rule) return send(res, 404, { detail: "Unknown model path" })
+      const body = JSON.parse(
+        (await readBody(req)).toString() || "{}"
+      ) as Record<string, unknown>
+      const usd = usdForRequest(rule, { path, body }, [])
+      return send(res, 200, { credits: String(usd * 100), usd: String(usd) })
+    }
     if (method === "POST") {
       const body = JSON.parse(
         (await readBody(req)).toString() || "{}"
@@ -235,7 +246,7 @@ const server = createServer(async (req, res) => {
   }
 })
 
-server.listen(PORT, () =>
+server.listen(PORT, "127.0.0.1", () =>
   console.log(
     `Mock Higgsfield API on ${BASE} (${images.length} images, ${videos.length} videos)`
   )

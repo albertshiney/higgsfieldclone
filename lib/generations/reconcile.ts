@@ -70,6 +70,7 @@ export async function reconcile(
     .toArray()
   for (const gen of unconfirmed)
     await guard(async () => {
+      if (gen.provider === "muapi" || gen.provider === "sume") return
       const result = await generations.updateOne(
         {
           _id: gen._id,
@@ -93,7 +94,7 @@ export async function reconcile(
       }
     })
 
-  // 2. Timeouts: runs that never finish must not hold credits forever.
+  // MuAPI has no verified cancellation contract, so only confirmed terminal states release its credits.
   const expired = await generations
     .find({
       status: { $in: ["queued", "in_progress"] },
@@ -105,6 +106,7 @@ export async function reconcile(
     await guard(async () => {
       // One last look: it may have finished without a webhook.
       if ((await finalizeGeneration(gen._id)) !== "in_flight") return
+      if (gen.provider === "muapi" || gen.provider === "sume") return
       if (gen.status === "queued" && gen.hfRequestId)
         await higgsfield()
           .cancel(gen.hfRequestId)
@@ -158,7 +160,7 @@ export async function reconcile(
       if (refunded) summary.refunds++
     })
 
-  // 5. Outputs we couldn't copy yet (platform keeps them ≥ 7 days).
+  // 5. Retry recent provider outputs that could not be copied.
   const onPlatform = await generations
     .find({
       status: "completed",

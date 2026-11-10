@@ -98,6 +98,9 @@ export interface GenerationDoc {
   media: GenerationMedia[]
   status: GenerationStatus
   hfRequestId?: string
+  provider?: "higgsfield" | "muapi" | "sume"
+  providerCostUsd?: number
+  providerRefunded?: boolean
   /** Credits charged, and how they split across buckets. */
   cost: number
   costSplit: Credits

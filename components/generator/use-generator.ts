@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
+import { quoteGenerationAction } from "@/app/actions/generations"
+import type { SubmitInput } from "@/lib/generations/submit"
 import { useApp, useToast } from "@/components/providers/app-providers"
 import {
   findModel,
@@ -85,6 +87,7 @@ export function useGenerator(surface: Surface, presets: PresetView[] = []) {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const pendingResume = useRef(false)
+  const submissionInFlight = useRef(false)
 
   const disabled = useMemo(() => new Set(pricing.disabled), [pricing.disabled])
   const tabs = useMemo(() => tabsFor(surface), [surface])
@@ -221,7 +224,12 @@ export function useGenerator(surface: Surface, presets: PresetView[] = []) {
 
   const hasInput = finalPrompt.trim().length > 0 || media.length > 0
   // The endpoint these settings reach has no price (yet) on this deployment.
-  const unpriced = Boolean(validation.path && !pricing.table[validation.path])
+  const unpriced = Boolean(
+    model?.apiProvider !== "muapi" &&
+    model?.apiProvider !== "sume" &&
+    validation.path &&
+    !pricing.table[validation.path]
+  )
   const disabledReason = !hasInput
     ? model?.requirePrompt ||
       !model?.roles ||
@@ -237,44 +245,82 @@ export function useGenerator(surface: Surface, presets: PresetView[] = []) {
 
   /* ── Actions ───────────────────────────────────────────────────────────── */
   const generate = useCallback(async () => {
-    if (!model || !validation.plane) return
+    if (!model || !validation.plane || submissionInFlight.current) return
     if (!user) {
       openAuth({
         mode: "signup",
         resume: "generate",
-        reason: "Create a free account to generate — your prompt is saved.",
+        reason:
+          "Sign in to review the cost and generate. Your prompt is saved.",
       })
       return
     }
+    submissionInFlight.current = true
     setSubmitting(true)
     setError(null)
-    const result = await runs.submit({
-      submitKey: newKey(),
-      modelId: model.id,
-      prompt: finalPrompt,
-      settings,
-      media: media.map((item) => ({
-        role: item.role,
-        url: item.url,
-        ...(item.name ? { name: item.name } : {}),
-      })),
-      ...(preset ? { presetId: preset.slug } : {}),
-    })
-    setSubmitting(false)
-    if (!result.ok) {
-      if (result.code === "INSUFFICIENT_CREDITS") {
-        openUpgrade(result.error)
+    try {
+      const input: SubmitInput = {
+        submitKey: newKey(),
+        modelId: model.id,
+        prompt: finalPrompt,
+        settings,
+        media: media.map((item) => ({
+          role: item.role,
+          url: item.url,
+          ...(item.name ? { name: item.name } : {}),
+        })),
+        ...(preset ? { presetId: preset.slug } : {}),
+      }
+      if (
+        pricing.live ||
+        model.apiProvider === "muapi" ||
+        model.apiProvider === "sume"
+      ) {
+        const estimate = await quoteGenerationAction(input)
+        if (!estimate.ok) {
+          setError(estimate.error)
+          return
+        }
+        const shown = (Math.ceil(estimate.data.usd * 1000) / 1000).toFixed(3)
+        if (
+          !window.confirm(
+            "Estimated provider cost: $" +
+              shown +
+              "\nStudio charge: " +
+              estimate.data.credits +
+              " credits\nPer-generation limit: $" +
+              estimate.data.maxUsd.toFixed(2) +
+              "\n\nGenerate with " +
+              model.label +
+              "?"
+          )
+        )
+          return
+        input.approval = estimate.data.approval
+      }
+      const result = await runs.submit(input)
+      if (!result.ok) {
+        if (result.code === "INSUFFICIENT_CREDITS") {
+          openUpgrade(result.error)
+          return
+        }
+        if (result.code === "UNAUTHORIZED") {
+          openAuth({ mode: "login", resume: "generate" })
+          return
+        }
+        setError(result.error)
         return
       }
-      if (result.code === "UNAUTHORIZED") {
-        openAuth({ mode: "login", resume: "generate" })
-        return
-      }
-      setError(result.error)
-      return
+      if (result.record.status === "failed")
+        toast.error("Generation couldn't start", result.record.error)
+    } catch {
+      setError(
+        "The studio could not confirm this request. Check History before trying again."
+      )
+    } finally {
+      submissionInFlight.current = false
+      setSubmitting(false)
     }
-    if (result.record.status === "failed")
-      toast.error("Generation couldn't start", result.record.error)
   }, [
     finalPrompt,
     media,
@@ -282,6 +328,7 @@ export function useGenerator(surface: Surface, presets: PresetView[] = []) {
     openAuth,
     openUpgrade,
     preset,
+    pricing.live,
     runs,
     settings,
     toast,

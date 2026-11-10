@@ -18,20 +18,22 @@ import m13 from "./models/kling-omni"
 import m14 from "./models/ltx-2-5"
 import m15 from "./models/marketing-image"
 import m16 from "./models/minimax-h3"
-import m17 from "./models/pixverse-v6"
-import m18 from "./models/qwen-image-3"
-import m19 from "./models/recraft-4-1"
-import m20 from "./models/seedance-2"
-import m21 from "./models/seedance-2-5"
-import m22 from "./models/soul"
-import m23 from "./models/wan-2-6"
-import m24 from "./models/wan-2-7"
-import m25 from "./models/wan-3"
-import m26 from "./models/z-image-turbo"
+import m17 from "./models/muapi-budget"
+import m18 from "./models/pixverse-v6"
+import m19 from "./models/qwen-image-3"
+import m20 from "./models/recraft-4-1"
+import m21 from "./models/seedance-2"
+import m22 from "./models/seedance-2-5"
+import m23 from "./models/soul"
+import m24 from "./models/sume"
+import m25 from "./models/wan-2-6"
+import m26 from "./models/wan-2-7"
+import m27 from "./models/wan-3"
+import m28 from "./models/z-image-turbo"
 
 const LAST = Number.MAX_SAFE_INTEGER
 
-const installed: (ModelEntry | ModelEntry[])[] = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21, m22, m23, m24, m25, m26]
+const installed: (ModelEntry | ModelEntry[])[] = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20, m21, m22, m23, m24, m25, m26, m27, m28]
 
 export const MODELS: readonly ModelEntry[] = installed
   .flat()

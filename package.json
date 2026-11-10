@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "pnpm dev:local",
     "build": "next build && node scripts/check-client-secrets.mjs",
     "start": "next start",
     "lint": "eslint",
@@ -19,13 +19,25 @@
     "pricing:sync": "tsx --conditions=react-server scripts/sync-pricing.ts",
     "mock:higgsfield": "tsx scripts/mock-higgsfield.ts",
     "email:dev": "email dev --dir emails",
-    "db:dev": "tsx scripts/dev-mongo.ts"
+    "db:dev": "tsx scripts/dev-mongo.ts",
+    "dev:secure": "infisical run --env=dev --path=/ -- node node_modules/next/dist/bin/next dev --hostname 127.0.0.1",
+    "dev:local": "powershell -NoProfile -File scripts/start-local.ps1",
+    "config:check": "infisical run --env=dev --path=/ -- node scripts/check-config.mjs",
+    "db:init:secure": "infisical run --env=dev --path=/ -- node --conditions=react-server --import tsx scripts/db-init.ts",
+    "test:e2e:secure": "infisical run --env=dev --path=/ -- node scripts/test-mock-e2e.mjs",
+    "build:secure": "infisical run --env=dev --path=/ -- pnpm build",
+    "generate:seedance": "node --env-file-if-exists=.env.local --import tsx index.ts",
+    "generate:seedance:secure": "infisical run --env=dev --path=/ -- node --import tsx index.ts",
+    "test:e2e:fixtures": "node scripts/test-provider-fixtures.mjs",
+    "providers:muapi:check": "infisical run --env=dev --path=/ --silent --log-level=error -- node --conditions=react-server --import tsx scripts/check-muapi-provider.ts",
+    "providers:sume:check": "infisical run --env=dev --path=/ --silent --log-level=error -- node --conditions=react-server --import tsx scripts/check-sume-provider.ts"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "3.11.3",
     "@aws-sdk/client-s3": "^3.1141.0",
     "@aws-sdk/lib-storage": "^3.1141.0",
     "@base-ui/react": "^1.8.0",
+    "@higgsfield/client": "^0.2.6",
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.1.0",
     "@tanstack/react-virtual": "^3.14.13",
@@ -33,16 +45,15 @@
     "cn": "^0.4.0",
     "lucide-react": "^1.48.0",
     "mongodb": "^6.21.0",
-    "next": "16.3.4",
+    "next": "16.4.1",
     "next-auth": "5.0.0-beta.32",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "resend": "^6.30.0",
     "server-only": "^0.0.1",
-    "shadcn": "^4.21.0",
     "stripe": "^22.6.2",
     "tw-animate-css": "^1.4.0",
-    "zod": "^4.6.5",
+    "zod": "^4.6.6",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
@@ -52,13 +63,21 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9.39.5",
-    "eslint-config-next": "16.3.4",
+    "eslint-config-next": "16.4.1",
     "mongodb-memory-server": "^11.3.0",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "shadcn": "4.21.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.2"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "pnpm": {
+    "overrides": {
+      "follow-redirects": "^1.16.2",
+      "ip-address": "^10.7.4"
+    }
   }
 }

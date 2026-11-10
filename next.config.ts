@@ -29,6 +29,7 @@ function contentSecurityPolicy(): string {
     "blob:",
     origin(process.env.R2_PUBLIC_BASE_URL),
     "https://*.higgsfield.ai",
+    "https://media.sume.com",
     "https://*.cloudfront.net",
     ...(isDev ? ["http://localhost:4010"] : []),
   ].filter(Boolean)
@@ -73,6 +74,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  logging: { incomingRequests: false, serverFunctions: false },
   poweredByHeader: false,
   async headers() {
     return [

@@ -21,6 +21,7 @@ export function toGenerationView(doc: GenerationDoc): GenerationView {
     status: doc.status,
     cost: doc.cost,
     refunded: doc.refunded ?? 0,
+    canCancel: doc.provider !== "muapi" && doc.provider !== "sume",
     outputs: doc.outputs.map(({ kind, url, width, height, durationSec }) => ({
       kind,
       url,

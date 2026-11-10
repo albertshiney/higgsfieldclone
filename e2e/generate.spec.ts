@@ -5,7 +5,7 @@ import { expect, test } from "./fixtures"
 import { balance, dismissCookies, signIn, uniqueEmail } from "./helpers"
 
 async function generateImage(page: Page, prompt: string) {
-  await page.goto("/image")
+  await page.goto("/image?model=soul-2")
   await dismissCookies(page)
   const field = page.getByRole("textbox", { name: /Describe the scene/ })
   await field.fill(prompt)
@@ -95,4 +95,38 @@ test("not enough credits opens the upgrade modal", async ({ page }) => {
   await expect(
     page.getByRole("dialog", { name: /Get more credits|Upgrade your plan/ })
   ).toBeVisible()
+})
+
+test("generate a video and retain its playable output after refresh", async ({
+  page,
+}) => {
+  await signIn(page, uniqueEmail("video"), "/video?model=kling-3-std")
+  await page.goto("/video?model=kling-3-std")
+  await dismissCookies(page)
+  const before = await balance(page)
+  await page
+    .getByRole("textbox", { name: /Prompt|Describe/ })
+    .first()
+    .fill("A slow flight over a mountain lake")
+  await page
+    .getByRole("button", { name: /^Generate/ })
+    .first()
+    .click()
+  await expect.poll(() => balance(page)).toBeLessThan(before)
+  const tile = page.getByRole("button", {
+    name: /Open generation: A slow flight/,
+  })
+  await expect(tile).toBeVisible({ timeout: 45_000 })
+  await page.reload()
+  await expect(tile).toBeVisible()
+  await tile.first().click()
+  await expect(page.getByRole("dialog").locator("video")).toBeVisible()
+  await expect
+    .poll(() =>
+      page
+        .getByRole("dialog")
+        .locator("video")
+        .evaluate((video) => (video as HTMLVideoElement).readyState)
+    )
+    .toBeGreaterThanOrEqual(2)
 })

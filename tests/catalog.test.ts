@@ -1,7 +1,13 @@
 import { existsSync, readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
-import { getModel, MODELS, parseSettings } from "@/generation/catalog"
+import {
+  defaultModel,
+  modelsFor,
+  getModel,
+  MODELS,
+  parseSettings,
+} from "@/generation/catalog"
 import { groupMedia, inferInputMode } from "@/generation/catalog/media-inputs"
 import type {
   GenerationPlane,
@@ -550,6 +556,27 @@ const CASES: Record<string, Case[]> = {
     },
   ],
 
+  "sume-seedance-2-mini": [text("v1/video-router/generate")],
+  "sume-seedance-2-fast": [text("v1/video-router/generate")],
+  "sume-minimax-h3-max": [text("v1/video-router/generate")],
+  "sume-minimax-h3": [text("v1/video-router/generate")],
+  "sume-gpt-image-2": [text("v1/image-router/generate")],
+  "sume-gpt-image-2-edit": [
+    { name: "edit", path: "v1/image-router/generate", media: { reference: 1 } },
+  ],
+  "sume-veed-lipsync": [
+    {
+      name: "lip sync",
+      path: "v1/video-router/generate",
+      media: { source: 1, audio: 1 },
+    },
+  ],
+  "muapi-h3-max-turbo": [text("minimax-h3-max-turbo-text-to-video")],
+  "muapi-h3-max": [text("minimax-h3-max-text-to-video")],
+  "muapi-seedance-mini": [text("seedance-2-mini-text-to-video")],
+  "muapi-seedance-fast": [text("seedance-2-text-to-video-fast")],
+  "muapi-wan25-fast": [text("wan2.5-text-to-video-fast")],
+  "muapi-wan26": [text("wan2.6-text-to-video")],
   /* Video — motion */
   "kling-3-motion-std": [
     {
@@ -673,7 +700,12 @@ describe.skipIf(!existsSync(DIGEST))(
         it(`${model.id} › ${c.name}`, () => {
           const { path, body } = run(model.id, c)
           reached.add(path)
-          if (UNDIGESTED.has(path)) return
+          if (
+            model.apiProvider === "muapi" ||
+            model.apiProvider === "sume" ||
+            UNDIGESTED.has(path)
+          )
+            return
           const fields = digest.get(path)
           expect(fields, `undocumented path ${path}`).toBeDefined()
           if (!fields) return
@@ -758,6 +790,18 @@ function visibleStrings(model: ModelEntry): string[] {
 }
 
 describe("catalog metadata", () => {
+  it("defaults to MiniMax H3 and puts budget video choices first", () => {
+    expect(defaultModel("video")?.id).toBe("sume-seedance-2-mini")
+    expect(
+      modelsFor("video", "create")
+        .slice(0, 3)
+        .map((model) => model.id)
+    ).toEqual([
+      "sume-seedance-2-mini",
+      "sume-minimax-h3-max",
+      "sume-minimax-h3",
+    ])
+  })
   it("has unique ids", () => {
     const ids = MODELS.map((model) => model.id)
     expect(new Set(ids).size).toBe(ids.length)
@@ -777,6 +821,19 @@ describe("catalog metadata", () => {
   for (const model of MODELS) {
     describe(model.id, () => {
       it("cites docs pages", () => {
+        if (model.apiProvider === "sume") {
+          expect(model.docs).toContain("https://api.sume.com/v1/openapi.json")
+          return
+        }
+        if (model.apiProvider === "muapi") {
+          expect(model.docs).toContain("https://muapi.ai/docs/pricing")
+          expect(
+            model.docs.some((url) =>
+              url.startsWith("https://api.muapi.ai/api/v1/models/")
+            )
+          ).toBe(true)
+          return
+        }
         expect(model.docs.length).toBeGreaterThan(0)
         for (const url of model.docs) {
           expect(url.startsWith(DOCS_PREFIX)).toBe(true)

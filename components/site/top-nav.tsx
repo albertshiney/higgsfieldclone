@@ -25,6 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useHydrated } from "@/lib/studio/local-flag"
 import { cn } from "@/lib/utils"
 
 import { Logo } from "./logo"
@@ -36,6 +37,7 @@ import { navLinks } from "./nav-links"
  * (or Login / Sign up). `compact` is the 36 px app-page variant.
  */
 export function TopNav({ compact = false }: { compact?: boolean }) {
+  const hydrated = useHydrated()
   const pathname = usePathname()
   const links = navLinks()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -75,6 +77,7 @@ export function TopNav({ compact = false }: { compact?: boolean }) {
         <AccountControls compact={compact} />
         <button
           type="button"
+          disabled={!hydrated}
           aria-label="Open menu"
           className="flex size-9 items-center justify-center rounded-[10px] bg-white/5 text-foreground md:hidden"
           onClick={() => setMobileOpen(true)}
@@ -92,6 +95,7 @@ export function TopNav({ compact = false }: { compact?: boolean }) {
 }
 
 function AccountControls({ compact }: { compact: boolean }) {
+  const hydrated = useHydrated()
   const { user, credits, openAuth, openUpgrade } = useApp()
   const height = compact ? "h-8" : "h-9"
   if (!user)
@@ -99,6 +103,7 @@ function AccountControls({ compact }: { compact: boolean }) {
       <>
         <button
           type="button"
+          disabled={!hydrated}
           onClick={() => openAuth({ mode: "login" })}
           className={cn(
             "hidden rounded-[10px] bg-lime/10 px-3 text-sm font-medium text-lime transition-colors hover:bg-lime/15 sm:block",
@@ -109,6 +114,7 @@ function AccountControls({ compact }: { compact: boolean }) {
         </button>
         <button
           type="button"
+          disabled={!hydrated}
           onClick={() => openAuth({ mode: "signup" })}
           className={cn(
             "btn-keycap rounded-[10px] px-3 text-sm font-semibold",

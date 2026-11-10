@@ -61,7 +61,7 @@ export async function resolveOwnedMedia(
         id: `m${index}`,
         role: item.role,
         kind: upload.kind,
-        url: upload.url,
+        url: upload.platformUrl ?? upload.url,
         displayUrl: upload.url,
         name: item.name ?? upload.name,
         ...(upload.durationSec ? { durationSec: upload.durationSec } : {}),

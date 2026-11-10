@@ -21,3 +21,5 @@ the component here, backward compatible.
 Design invariants: dark only; lime `bg-primary`/`bg-lime` is reserved for the
 Generate CTA and active states; icons are `lucide-react`; every visible
 control works end to end.
+
+Dialog entry controls use `DialogTrigger` from `components/ui/dialog.tsx`. It keeps server-rendered triggers disabled until client handlers are ready. Preserve existing render-trigger props and layouts.

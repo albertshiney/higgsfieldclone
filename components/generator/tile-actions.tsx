@@ -80,7 +80,7 @@ export function useTileActions({
       if (item.status === "generating") {
         const elapsed = Date.now() - run.createdAt
         return [
-          ...(run.status === "queued"
+          ...(run.status === "queued" && run.canCancel !== false
             ? [
                 {
                   id: "cancel",

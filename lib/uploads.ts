@@ -15,9 +15,10 @@ import type { SessionUser } from "@/lib/auth/session"
 import { objectIdOrNotFound } from "@/lib/ids"
 import { NotFoundError } from "@/lib/errors"
 import { collections, type UploadDoc } from "@/lib/db/collections"
-import { env } from "@/lib/env"
+import { env, providerFixtureMode } from "@/lib/env"
 import { toUploadView } from "@/lib/generations/serialize"
 import type { UploadView } from "@/lib/generations/view"
+import { sume } from "@/lib/sume/client"
 import { higgsfield } from "@/lib/higgsfield/client"
 import { enforceRateLimit, LIMITS } from "@/lib/rate-limit"
 import {
@@ -87,7 +88,9 @@ export async function createUploadTicket(user: SessionUser, raw: unknown) {
     LIMITS.uploadPerUser.window,
     "Too many uploads. Wait a few minutes and try again."
   )
-  const ticket = await higgsfield().createUpload(contentType)
+  const ticket = !providerFixtureMode()
+    ? await sume().createUpload(contentType, input.size, input.name)
+    : await higgsfield().createUpload(contentType)
   const expires = Date.now() + TICKET_TTL_MS
   return {
     ticket,

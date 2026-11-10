@@ -27,7 +27,7 @@ test("user B can't read user A's generation status or open A's project", async (
   await expect(pageA).toHaveURL(/\/projects\/[a-f0-9]{24}/)
   const projectUrl = pageA.url()
 
-  await pageA.goto("/image")
+  await pageA.goto("/image?model=soul-2")
   await pageA
     .getByRole("textbox", { name: /Describe the scene/ })
     .fill("Owner-only image")
@@ -65,4 +65,34 @@ test("user B can't read user A's generation status or open A's project", async (
   expect(anonymous.status()).toBe(401)
   await a.close()
   await b.close()
+})
+
+test("dialog controls cannot receive clicks before client scripts run", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false })
+  try {
+    const page = await context.newPage()
+    await page.goto("/video")
+    await expect(
+      page.getByRole("button", { name: "Sign up", exact: true }).first()
+    ).toBeDisabled()
+    await expect(
+      page.getByRole("button", {
+        name: "Open menu",
+        exact: true,
+        includeHidden: true,
+      })
+    ).toBeDisabled()
+    await signIn(page, uniqueEmail("before-hydration"), "/assets")
+    await expect(
+      page.getByRole("button", { name: "New project" })
+    ).toBeDisabled()
+    await page.goto("/video")
+    await expect(
+      page.getByRole("button", { name: "Change", exact: true })
+    ).toHaveCount(0)
+  } finally {
+    await context.close()
+  }
 })

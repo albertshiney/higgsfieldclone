@@ -4,7 +4,7 @@ import { z } from "zod"
 
 /**
  * Server environment, validated once with zod. Production requires every
- * service; development allows documented fallbacks (magic links in the log,
+ * service; development allows documented fallbacks (magic links in the local mailbox,
  * media on local disk, the mock Higgsfield server) and says so once.
  */
 
@@ -47,6 +47,23 @@ const schema = z.object({
   MONGODB_URI: optionalString,
   MONGODB_DB: z.string().default("vireo-studio"),
 
+  SUME_API_KEY: optionalString,
+  SUME_API_BASE_URL: z.url().default("https://api.sume.com"),
+  MUAPI_API_KEY: optionalString,
+  MUAPI_API_BASE_URL: z
+    .url()
+    .default("https://api.muapi.ai/api/v1")
+    .refine((value) => {
+      const url = new URL(value)
+      return (
+        value === "https://api.muapi.ai/api/v1" ||
+        (process.env.NODE_ENV !== "production" &&
+          url.protocol === "http:" &&
+          ["localhost", "127.0.0.1"].includes(url.hostname))
+      )
+    }, "Use the official MuAPI origin or an explicit local fixture."),
+  GENERATION_MAX_USD: z.coerce.number().finite().nonnegative().default(0.5),
+
   HF_API_BASE_URL: z.url().default("https://api.higgsfield.ai"),
   HF_CREDENTIALS: optionalString.refine(
     (value) => value === undefined || /^[^:\s]+:[^:\s]+$/.test(value),
@@ -84,9 +101,7 @@ const REQUIRED_IN_PRODUCTION = [
   "AUTH_SECRET",
   "AUTH_RESEND_KEY",
   "MONGODB_URI",
-  "HF_CREDENTIALS",
-  "HF_WEBHOOK_SECRET",
-  "HF_WEBHOOK_BASE_URL",
+  "SUME_API_KEY",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "R2_ACCOUNT_ID",
@@ -132,9 +147,8 @@ export function env(): Env {
       !value.MONGODB_URI &&
         "MONGODB_URI unset → run `pnpm db:dev` for a local replica set",
       !value.AUTH_RESEND_KEY &&
-        "AUTH_RESEND_KEY unset → magic links are printed to this log",
-      !value.HF_CREDENTIALS &&
-        "HF_CREDENTIALS unset → generation is disabled (use `pnpm mock:higgsfield` + HF_CREDENTIALS=mock:mock)",
+        "AUTH_RESEND_KEY unset → magic links are stored in the local development mailbox",
+      !value.SUME_API_KEY && "SUME_API_KEY unset → Sume generation is disabled",
       !r2Configured(value) &&
         "R2 unset → media is stored under .data/media and served by /api/media",
       !value.STRIPE_SECRET_KEY &&
@@ -146,6 +160,22 @@ export function env(): Env {
   }
   cached = value
   return value
+}
+
+export function providerFixtureMode(): boolean {
+  const value = env()
+  if (
+    value.NODE_ENV === "test" &&
+    value.HF_API_BASE_URL === "https://hf.test" &&
+    value.HF_CREDENTIALS === "key:secret"
+  )
+    return true
+  return (
+    value.NODE_ENV !== "production" &&
+    value.E2E_TEST_MODE &&
+    ["localhost", "127.0.0.1"].includes(new URL(value.APP_URL).hostname) &&
+    ["localhost", "127.0.0.1"].includes(new URL(value.HF_API_BASE_URL).hostname)
+  )
 }
 
 export function r2Configured(value: Env = env()): boolean {

@@ -9,7 +9,7 @@ import { env } from "@/lib/env"
 
 /**
  * Transactional email through Resend. Without AUTH_RESEND_KEY outside
- * production, the message is printed to the server log and kept in the
+ * production, sign-in links are kept in the
  * dev_mailbox collection (24 h TTL) so E2E tests can follow magic links.
  */
 let resend: Resend | undefined
@@ -58,9 +58,7 @@ export async function sendEmail(input: {
   if (value.NODE_ENV === "production")
     throw new Error("AUTH_RESEND_KEY is required to send email in production")
   console.info(
-    `\n[email:dev] To: ${input.to}\n[email:dev] Subject: ${input.subject}\n${
-      input.devUrl ? `[email:dev] Link: ${input.devUrl}\n` : ""
-    }`
+    "[email:dev] Message captured locally. Sign-in links are not logged."
   )
 }
 

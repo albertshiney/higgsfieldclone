@@ -14,10 +14,18 @@ import {
   setPublished,
 } from "@/lib/generations/library"
 import { toGenerationView } from "@/lib/generations/serialize"
-import { submitGeneration, type SubmitInput } from "@/lib/generations/submit"
+import {
+  quoteGeneration,
+  submitGeneration,
+  type SubmitInput,
+} from "@/lib/generations/submit"
 import type { GenerationView } from "@/lib/generations/view"
 import { IN_FLIGHT } from "@/lib/db/collections"
 import { enforceRateLimit } from "@/lib/rate-limit"
+
+export async function quoteGenerationAction(input: SubmitInput) {
+  return runAction(async () => quoteGeneration(await requireUser(), input))
+}
 
 export async function submitGenerationAction(
   input: SubmitInput

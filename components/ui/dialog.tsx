@@ -5,6 +5,8 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "cn"
 import { XIcon } from "lucide-react"
 
+import { useHydrated } from "@/lib/studio/local-flag"
+
 /**
  * Dialog — Base UI `Dialog` with the Quanta Modal skin (q-modal-* from
  * styles/quanta/components/modal.css): dim backdrop, centered frosted glass
@@ -41,8 +43,15 @@ function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
 
-function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
-  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
+function DialogTrigger({ disabled, ...props }: DialogPrimitive.Trigger.Props) {
+  const hydrated = useHydrated()
+  return (
+    <DialogPrimitive.Trigger
+      data-slot="dialog-trigger"
+      {...props}
+      disabled={disabled || !hydrated}
+    />
+  )
 }
 
 function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
