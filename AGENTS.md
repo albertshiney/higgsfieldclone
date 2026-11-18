@@ -120,6 +120,6 @@ Keep repository-specific domain context in docs/agents/domain.md.
 
 ## Dependency checks
 
-- Preserve the verified Next.js 16.4.1 security baseline, Zod >=4.6.6, follow-redirects >=1.16.2 and ip-address >=10.7.4 when updating packages.
-- One unpatched low-severity deepmerge email-renderer advisory is tracked in BOOZI-60. Report it honestly; do not suppress audit findings.
+- Preserve the verified Next.js 16.4.6 security baseline, Zod >=4.6.6, follow-redirects >=1.16.2 and ip-address >=10.7.4 when updating packages.
+- BOOZI-60 tracks an earlier low-severity deepmerge email-renderer advisory. Check current audits and report remaining findings honestly; do not suppress them.
 - Native browser confirmation tests must handle the dialog concurrently with the click so Playwright does not wait on a blocked browser action.

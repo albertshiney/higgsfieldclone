@@ -74,6 +74,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  experimental: { agentUpgrade: "security" },
   logging: { incomingRequests: false, serverFunctions: false },
   poweredByHeader: false,
   async headers() {
