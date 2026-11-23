@@ -20,6 +20,8 @@ Stable Idempotency-Key values use the persisted submission intent. No automatic 
 
 The adapter polls canonical /v1/jobs/{id}/status and /result paths. Only final HTTPS artifacts are copied to owned storage. Upload tickets come from /v1/files/generate-upload-url. Sume cancellation and webhooks are not enabled. No webhook secret is needed for the polling implementation.
 
+The production reconciler runs on the configured minute cron and selects Sume jobs after five seconds without an update. It processes up to 40 stale jobs per run, so backlog, provider response times and storage copies can add delay. The browser reads the database every 3.5 seconds and never polls Sume directly. Development uses a separate five-second reconciliation loop.
+
 ## Verification
 Use pnpm providers:sume:check for free estimates only. On October 23, 2026 the actual application client returned $0.20 for Seedance 2 Mini, five seconds at 480p, and $0.006 for one low-quality GPT Image 2 image. Authenticated model catalogs were accessible. The scoped key rejects /v1/me and MCP access; neither route is needed for this adapter.
 

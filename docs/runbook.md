@@ -7,8 +7,8 @@ Operating Vireo in production. Everything below is idempotent unless noted.
 | Signal | Where | Healthy |
 |---|---|---|
 | Reconciler | Vercel → Cron → `/api/cron/reconcile` | 200 every minute; JSON summary with small numbers |
-| In-flight runs | Admin → Generations → status `queued` / `in_progress` | Nothing older than `RUN_TIMEOUT_MINUTES` (30) |
-| Pending submits | Admin → Generations → `pending_submit` | Empty after 2 minutes |
+| In-flight runs | Admin → Generations → status `queued` / `in_progress` | Investigate old jobs; Sume and MuAPI retain reservations until confirmed |
+| Pending submits | Admin → Generations → `pending_submit` | Investigate uncertain Sume and MuAPI submissions |
 | Pricing | Admin → Models & pricing | No pink "placeholder" or "Reprice" badges |
 | Billing flags | Admin → Users (pink ⚠ next to an email) | None unreviewed |
 
@@ -27,18 +27,19 @@ Operating Vireo in production. Everything below is idempotent unless noted.
 
 1. Admin → Generations, filter by status. Note the platform request id.
 2. The user can press **Check status** on the tile (after 90 s), or wait for
-   the reconciler (runs every minute; anything untouched for 3 minutes is
-   re-fetched).
-3. After `RUN_TIMEOUT_MINUTES` the reconciler cancels (if queued) or fails the
-   run and refunds. A late platform success is still delivered to the user
-   (logged as "late delivery"), without re-charging.
+   the minute cron. It selects Sume jobs after five seconds without an update;
+   other providers use three minutes. The batch limit and provider or storage
+   delays can extend the wait.
+3. Sume and MuAPI jobs remain funded until a provider terminal status is
+   confirmed. Do not infer cancellation or a provider refund from a timeout.
+   Legacy Higgsfield timeout handling follows its existing cancellation path.
 
 ### Ambiguous submits (`pending_submit` with no request id)
 
-The platform has no idempotency key, so timeouts/502/504 on submit are never
-retried automatically. After 2 minutes the reconciler marks them failed and
-refunds. If a webhook for that generation arrives later, the result is attached
-and delivered free.
+Sume and MuAPI submissions with an unknown outcome remain pending for operator
+review, with credits reserved. Never submit a new paid job to resolve an
+uncertain submission. The two-minute failure and refund path applies to legacy
+Higgsfield submissions.
 
 ### Platform errors in logs
 

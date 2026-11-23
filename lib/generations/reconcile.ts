@@ -12,7 +12,7 @@ import { finalizeGeneration, recopyPlatformOutputs } from "./finalize"
  * The reconciler (Vercel Cron every minute; an in-process loop in dev):
  *   • pending_submit older than 2 min with no request id → the submit never
  *     confirmed: mark failed and refund (a late webhook still attaches results);
- *   • queued / in_progress with no update for 3 min → finalize (poll status);
+ *   • Sume jobs are polled at the next cron run; other stale jobs after 3 min;
  *   • in flight past RUN_TIMEOUT_MINUTES → cancel if queued, fail + refund;
  *   • terminal failures with credits outstanding → refund (crash recovery);
  *   • outputs still on the platform CDN → retry the copy;
@@ -35,6 +35,7 @@ export async function reconcile(
 ): Promise<ReconcileSummary> {
   const now = options.now ?? new Date()
   const staleMs = (options.staleSeconds ?? 180) * 1000
+  const sumeStaleMs = (options.staleSeconds ?? 5) * 1000
   const pendingMs = (options.pendingSeconds ?? 120) * 1000
   const timeoutMs = env().RUN_TIMEOUT_MINUTES * 60_000
   const { generations } = await collections()
@@ -135,7 +136,16 @@ export async function reconcile(
     .find({
       status: { $in: [...IN_FLIGHT] },
       hfRequestId: { $exists: true },
-      updatedAt: { $lt: new Date(now.getTime() - staleMs) },
+      $or: [
+        {
+          provider: "sume",
+          updatedAt: { $lt: new Date(now.getTime() - sumeStaleMs) },
+        },
+        {
+          provider: { $ne: "sume" },
+          updatedAt: { $lt: new Date(now.getTime() - staleMs) },
+        },
+      ],
     })
     .sort({ updatedAt: 1 })
     .limit(BATCH)

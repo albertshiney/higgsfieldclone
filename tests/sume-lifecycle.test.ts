@@ -185,6 +185,27 @@ it("polls Sume and copies a completed video into owned storage", async () => {
     "already_terminal"
   )
 })
+it("detects a completed Sume job on the next production reconciliation", async () => {
+  const user = await createUser({ topup: 100 })
+  const view = await submitGeneration(user, await approved(user))
+  const { generations } = await collections()
+  await generations.updateOne(
+    { _id: new ObjectId(view.id) },
+    { $set: { updatedAt: new Date(Date.now() - 60_000) } }
+  )
+  await reconcile()
+  expect(polls).toHaveLength(1)
+  expect(
+    (await generations.findOne({ _id: new ObjectId(view.id) }))?.status
+  ).toBe("in_progress")
+
+  outcome = "completed"
+  await reconcile({ now: new Date(Date.now() + 60_000) })
+
+  const done = await generations.findOne({ _id: new ObjectId(view.id) })
+  expect(done?.status).toBe("completed")
+  expect(done?.outputs[0]?.storage).not.toBe("platform")
+})
 it("refunds a confirmed failure only once and records the provider refund separately", async () => {
   const user = await createUser({ topup: 100 })
   const view = await submitGeneration(user, await approved(user))

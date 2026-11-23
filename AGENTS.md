@@ -101,6 +101,7 @@ Keep repository-specific domain context in docs/agents/domain.md.
 - New non-fixture requests allow only Sume entries. Seven entries cover GPT Image 2 create/edit, Seedance 2 Mini/Fast and MiniMax H3/Max text/image-to-video, and Veed video lip sync. Uninstalled features remain unavailable. No alternative-provider coverage exceptions are approved yet.
 - Sume quotes use the verified current-origin POST /v1/open/estimate. Every new Sume job needs signed request-bound approval, a fresh quote, and a stable provider idempotency key.
 - Sume uses status polling and owned output storage. Cancellation and Sume webhooks are not enabled. Unknown submissions and slow jobs retain their ledger reservation until confirmed. Never equate a studio refund with a provider-wallet refund.
+- The production reconciler checks eligible Sume jobs on each minute cron run after five seconds without an update. Browser status polling remains database-only; cron batching and provider delays can add wait time.
 - providerFixtureMode permits legacy routes only with explicit loopback dummy fixtures or the unit harness. Production always enforces Sume-only submission. Unit suites run sequentially because concurrent temporary MongoDB replicas can exhaust Windows resources.
 - Preserve original providers for existing jobs and outputs. Do not relabel jobs, rotate keys, delete adapters, transfer balances, or run a paid migration test as part of adopting this policy.
 
