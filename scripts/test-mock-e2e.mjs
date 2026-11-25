@@ -1,32 +1,54 @@
 import { spawnSync } from "node:child_process"
-const provider = new URL(
-  process.env.HF_API_BASE_URL || "https://api.higgsfield.ai"
-)
-const app = new URL(
-  process.env.E2E_BASE_URL || process.env.APP_URL || "http://localhost:3000"
-)
-if (
-  !["http://localhost:4010", "http://127.0.0.1:4010"].includes(provider.origin)
-)
-  throw new Error(
-    "Fixture tests require the local mock provider. No paid generation is allowed."
+
+const fixtureApp = new URL("http://localhost:3001/")
+const requestedApp = process.env.E2E_BASE_URL
+if (requestedApp) {
+  let parsedApp
+  try {
+    parsedApp = new URL(requestedApp)
+  } catch {
+    throw new Error(
+      "E2E_BASE_URL must be the isolated fixture app at http://localhost:3001/."
+    )
+  }
+  if (
+    parsedApp.origin !== fixtureApp.origin ||
+    parsedApp.pathname !== fixtureApp.pathname ||
+    parsedApp.search ||
+    parsedApp.hash ||
+    parsedApp.username ||
+    parsedApp.password
   )
-if (!["localhost", "127.0.0.1", "[::1]"].includes(app.hostname))
-  throw new Error("Fixture tests require a loopback studio.")
+    throw new Error(
+      "Secure fixture tests manage their own isolated app at http://localhost:3001/. Unset E2E_BASE_URL or set it to that exact URL."
+    )
+}
+
+const env = {}
+for (const name of [
+  "PATH",
+  "Path",
+  "SystemRoot",
+  "SYSTEMROOT",
+  "WINDIR",
+  "TEMP",
+  "TMP",
+  "USERPROFILE",
+  "APPDATA",
+  "LOCALAPPDATA",
+  "COMSPEC",
+  "PATHEXT",
+])
+  if (process.env[name]) env[name] = process.env[name]
+
 const child = spawnSync(
   process.execPath,
-  ["node_modules/@playwright/test/cli.js", "test", ...process.argv.slice(2)],
-  {
-    stdio: "inherit",
-    env: {
-      ...process.env,
-      HF_CREDENTIALS: "mock:mock",
-      SUME_API_KEY: "",
-      MUAPI_API_KEY: "",
-      MUAPIAPP_API_KEY: "",
-      MUAPI_SANDBOX_API_KEY: "",
-      HF_API_BASE_URL: provider.origin,
-    },
-  }
+  ["scripts/test-provider-fixtures.mjs", ...process.argv.slice(2)],
+  { stdio: "inherit", env }
 )
-process.exitCode = child.status ?? 1
+if (child.error) {
+  console.error("Could not start the isolated browser fixture runner.")
+  process.exitCode = 1
+} else {
+  process.exitCode = child.status ?? 1
+}

@@ -14,6 +14,17 @@ const run = (args, env, stdio = "ignore") => {
 }
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 try {
+  await new Promise((resolve, reject) => {
+    const probe = createServer()
+    probe.once("error", (error) => {
+      if (error.code === "EADDRINUSE")
+        reject(new Error("Fixture app port 3001 is already in use."))
+      else reject(error)
+    })
+    probe.listen(3001, "127.0.0.1", () =>
+      probe.close((error) => (error ? reject(error) : resolve()))
+    )
+  })
   mongo = await MongoMemoryReplSet.create({
     replSet: { count: 1, storageEngine: "wiredTiger" },
   })

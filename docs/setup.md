@@ -122,7 +122,7 @@ Each invocation is billable. The example calls subscribe for bytedance/seedance-
 
 The requested single official SDK submission was executed on 2026-10-21 and rejected with HTTP 403. No completed video or video URL was returned. A separate non-generating estimate request returned HTTP 200, and a nonexistent request-status lookup returned 404. The signed-in Higgsfield billing page showed a $0.00 API balance and no payment method. After Mista Boo confirmed funding on 2026-10-21, one explicitly authorized rerun of pnpm generate:seedance:secure completed successfully (exit 0), returning a validated HTTPS video URL. A HEAD request to the generated artifact returned HTTP 200, Content-Type video/mp4, and Content-Length 4294129. The exact requested sunset prompt, 5-second duration, 720p resolution, and 16:9 aspect ratio were submitted through the official SDK. Credentials remained privately injected from Infisical. The local studio provider configuration remains mock; this verifies the standalone live SDK example.
 
-The secure browser-test wrapper refuses remote provider and app origins, substitutes only the dummy provider credential within the test child process, and leaves Infisical unchanged. The generator is client-only, so its picker is absent with JavaScript disabled; the project dialog is server-rendered and its trigger must be disabled before hydration. Normal browser tests verify both become usable.
+The secure browser-test wrapper delegates to the isolated fixture harness. The harness starts the app with a temporary database and loopback dummy providers, without inheriting Infisical secrets. It uses its own app at `http://localhost:3001`; a custom `E2E_BASE_URL` is rejected unless it points to that harness-owned app. It stops before testing if port 3001 is already occupied. The vault is unchanged. The generator is client-only, so its picker is absent with JavaScript disabled; the project dialog is server-rendered and its trigger must be disabled before hydration. Normal browser tests verify both become usable.
 
 ## Verified final SDK dependencies
 
@@ -153,7 +153,7 @@ See [MuAPI integration reference](muapi.md) for the verified routes, current est
 
 Live generation now requires a dollar confirmation. GENERATION_MAX_USD defaults to 0.50. Models or settings above the cap are rejected before debit. The initial MuAPI connection is text-to-video only. Key presence, account access, and a successful paid render are separate verification steps.
 
-Use pnpm test:e2e:fixtures for an isolated temporary database and local dummy providers. The older secure browser wrapper still requires the configured Higgsfield origin to be a local mock. Neither command authorizes paid verification.
+Use `pnpm test:e2e:fixtures` or `pnpm test:e2e:secure` for an isolated temporary database and local dummy providers. Both commands run the fixture app and never authorize paid verification.
 
 ## Current Sume runtime, 2026-10-23
 

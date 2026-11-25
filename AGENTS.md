@@ -90,7 +90,7 @@ Keep repository-specific domain context in docs/agents/domain.md.
 - generate:seedance:secure uses Infisical dev:/; generate:seedance supports an ignored .env.local as an explicit user-requested compatibility exception. Never inspect or print that file or copy vault credentials into it.
 - Each example invocation can create a billable request. Keep submissions non-retrying and never run this example as a test-suite setup step. Report success only for completed status plus a valid HTTPS video URL.
 
-- test:e2e:secure runs scripts/test-mock-e2e.mjs. It requires loopback app and mock provider origins, substitutes dummy credentials only in the browser-test child process, and never changes the vault.
+- test:e2e:secure runs browser tests only through the isolated fixture harness. It starts its own fixture app with temporary MongoDB and loopback dummy providers, does not inherit provider secrets, rejects a custom E2E_BASE_URL that is not the harness app, and stops if the app port is already occupied. It never changes the vault.
 
 ## Mandatory Sume-first provider policy
 
