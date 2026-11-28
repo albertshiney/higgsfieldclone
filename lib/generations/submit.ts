@@ -402,6 +402,7 @@ export async function sendToPlatform(
   const { generations } = await collections()
   const id = doc._id
   let accepted = false
+  let acceptedRequestId: string | undefined
   try {
     const queued = await generationClient(doc.provider).submit(
       doc.modelPath,
@@ -412,6 +413,7 @@ export async function sendToPlatform(
       doc.provider === "sume" ? doc.submitKey : undefined
     )
     accepted = true
+    acceptedRequestId = queued.requestId
     const status = queued.status === "in_progress" ? "in_progress" : "queued"
     const updated = await generations.findOneAndUpdate(
       { _id: id, status: "pending_submit" },
@@ -431,9 +433,14 @@ export async function sendToPlatform(
     return updated ?? doc
   } catch (caught) {
     if (accepted && (doc.provider === "muapi" || doc.provider === "sume")) {
+      // The provider already holds a paid job. Never resubmit. Log its request
+      // id (not a secret) so an operator can match it in the provider history;
+      // the generation stays pending_submit and its credits stay held.
       console.error(
         "[submit] Provider accepted generation " +
           id.toHexString() +
+          " as request " +
+          (acceptedRequestId ?? "unknown") +
           "; database confirmation failed. Do not retry submission."
       )
       return doc

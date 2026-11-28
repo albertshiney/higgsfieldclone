@@ -262,8 +262,14 @@ it("holds credits when the provider accepts but the database confirmation fails"
   const user = await createUser({ topup: 100 })
   const request = await approved(user)
   failDatabaseConfirmation = true
+  const logged = vi.spyOn(console, "error").mockImplementation(() => undefined)
   const view = await submitGeneration(user, request)
   expect(view.status).toBe("pending_submit")
+  expect(
+    logged.mock.calls.some((call) =>
+      String(call[0]).includes("as request sume-fixture")
+    )
+  ).toBe(true)
   await reconcile({ pendingSeconds: 0, now: new Date(Date.now() + 300000) })
   expect(await balanceOf(user.objectId)).toMatchObject({ topup: 60 })
   expect(submissions).toHaveLength(1)

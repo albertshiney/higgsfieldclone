@@ -61,7 +61,10 @@ export async function resolveOwnedMedia(
         id: `m${index}`,
         role: item.role,
         kind: upload.kind,
-        url: upload.platformUrl ?? upload.url,
+        // Platform upload URLs are temporary. Once our own copy exists
+        // (upload.key), send the durable URL so a paid job is not sent a link
+        // that expired between upload and Generate.
+        url: upload.key ? upload.url : (upload.platformUrl ?? upload.url),
         displayUrl: upload.url,
         name: item.name ?? upload.name,
         ...(upload.durationSec ? { durationSec: upload.durationSec } : {}),

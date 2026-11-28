@@ -69,6 +69,7 @@ try {
     CREDIT_USD_VALUE: "0.01",
     CREDIT_MARKUP: "2",
     NEXT_TELEMETRY_DISABLED: "1",
+    NEXT_DIST_DIR: ".next-fixture",
     BLOCK_DISPOSABLE_EMAIL: "false",
   })
   server = createServer(async (req, res) => {

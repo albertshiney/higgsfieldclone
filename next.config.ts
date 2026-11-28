@@ -72,7 +72,16 @@ const securityHeaders = [
       ]),
 ]
 
+/**
+ * The isolated fixture app (scripts/test-provider-fixtures.mjs) sets
+ * NEXT_DIST_DIR=.next-fixture so it never shares a build folder, lock or cache
+ * with a studio already running from .next. Only that exact name is accepted.
+ */
+const distDir =
+  process.env.NEXT_DIST_DIR === ".next-fixture" ? ".next-fixture" : ".next"
+
 const nextConfig: NextConfig = {
+  distDir,
   agentRules: false,
   experimental: { agentUpgrade: "security" },
   logging: { incomingRequests: false, serverFunctions: false },
